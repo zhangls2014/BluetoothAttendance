@@ -1,2 +1,5 @@
-# BluetoothAttendance
-蓝牙考勤
+### BluetoothAttendance 蓝牙考勤
+
+#### 项目说明
+
+本项目是由 Kotlin 语言开发的蓝牙考勤软件，通过蓝牙扫描附近的蓝牙设备的方式；来获取考勤数据，并上传服务器
