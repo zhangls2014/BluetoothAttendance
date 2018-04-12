@@ -1,7 +1,10 @@
-package com.zhangls.android.attendance
+package com.zhangls.android.attendance.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
@@ -9,7 +12,13 @@ import android.text.TextUtils
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
+import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle
+import com.trello.rxlifecycle2.LifecycleProvider
+import com.zhangls.android.attendance.R
+import com.zhangls.android.attendance.viewmodel.LoginViewModel
 import kotlinx.android.synthetic.main.activity_login.*
+import org.jetbrains.anko.toast
+
 
 /**
  * 登录页面
@@ -18,6 +27,8 @@ import kotlinx.android.synthetic.main.activity_login.*
  */
 class LoginActivity : AppCompatActivity() {
 
+    private val provider: LifecycleProvider<Lifecycle.Event> = AndroidLifecycle.createLifecycleProvider(this)
+    private lateinit var loginViewModel: LoginViewModel
     private val myHandler = Handler()
     private val mLoadingRunnable = Runnable { updateUI() }
 
@@ -32,6 +43,28 @@ class LoginActivity : AppCompatActivity() {
      * 页面已经加载后，加载界面，提升应用启动速度，减少白屏时间
      */
     private fun updateUI() {
+        loginViewModel = ViewModelProviders.of(this).get(LoginViewModel::class.java)
+        loginViewModel.setupProvider(provider)
+
+        // 消息显示监听
+        loginViewModel.getToastString().observe(this, Observer {
+            toast(it!!)
+        })
+        // 登录状态监听
+        loginViewModel.loginStatus.observe(this, Observer {
+            if (it == null) {
+                return@Observer
+            }
+
+            if (it) {
+                // 如果返回 true，表明已经登录成功，跳转主页
+                MainActivity.activityStart(this@LoginActivity)
+                finish()
+            } else {
+                showProgress(false)
+            }
+        })
+
         // 密码数据框键盘点击事件监听
         appEtPassword.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
@@ -60,7 +93,7 @@ class LoginActivity : AppCompatActivity() {
         var focusView: View? = null
 
         // 检查密码是否符合要求
-        if (!TextUtils.isEmpty(passwordStr) && !isPasswordValid(passwordStr)) {
+        if (!TextUtils.isEmpty(passwordStr) && !loginViewModel.isPasswordValid(passwordStr)) {
             appEtPassword.error = getString(R.string.error_invalid_password)
             focusView = appEtPassword
             cancel = true
@@ -71,33 +104,13 @@ class LoginActivity : AppCompatActivity() {
             appEtUsername.error = getString(R.string.error_field_required)
             focusView = appEtUsername
             cancel = true
-        } else if (!isAccountValid(accountStr)) {
+        } else if (!loginViewModel.isAccountValid(accountStr)) {
             appEtUsername.error = getString(R.string.error_invalid_account)
             focusView = appEtUsername
             cancel = true
         }
 
-        if (cancel) {
-            focusView?.requestFocus()
-        } else {
-            showProgress(true)
-
-            login()
-        }
-    }
-
-    /**
-     * 判断账户是否有效。因为没有正式的服务器，所以在本地判断账户是否正确
-     */
-    private fun isAccountValid(email: String): Boolean {
-        return email.length == 11
-    }
-
-    /**
-     * 判断密码是否有效。因为没有正式的服务器，所以在本地判断密码是否正确
-     */
-    private fun isPasswordValid(password: String): Boolean {
-        return password.length >= 6
+        if (cancel) focusView?.requestFocus() else login()
     }
 
     /**
@@ -106,47 +119,27 @@ class LoginActivity : AppCompatActivity() {
     private fun showProgress(show: Boolean) {
         val shortAnimTime = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
-        setVisibility(show)
-
         setAnimate(show, appLoginProgress, shortAnimTime)
-        setAnimate(show, appInputLayoutUserName, shortAnimTime)
-        setAnimate(show, appInputLayoutPassword, shortAnimTime)
-        setAnimate(show, appBtnLogin, shortAnimTime)
-    }
-
-    /**
-     * 设置界面的可见性
-     */
-    private fun setVisibility(show: Boolean) {
-        if (show) {
-            appInputLayoutUserName.visibility = View.GONE
-            appInputLayoutPassword.visibility = View.GONE
-            appBtnLogin.visibility = View.GONE
-
-            appLoginProgress.visibility = View.VISIBLE
-        } else {
-            appInputLayoutUserName.visibility = View.VISIBLE
-            appInputLayoutPassword.visibility = View.VISIBLE
-            appBtnLogin.visibility = View.VISIBLE
-
-            appLoginProgress.visibility = View.GONE
-        }
+        setAnimate(!show, appInputLayoutUserName, shortAnimTime)
+        setAnimate(!show, appInputLayoutPassword, shortAnimTime)
+        setAnimate(!show, appBtnLogin, shortAnimTime)
     }
 
     /**
      * 为界面显隐设置动画
      *
-     * @param show 是否可见
+     * @param show 界面是否可见
      * @param view 视图
      * @param shortAnimTime 动画时长
      */
     private fun setAnimate(show: Boolean, view: View, shortAnimTime: Long) {
+        view.animate().cancel()
         view.animate()
                 .setDuration(shortAnimTime)
-                .alpha((if (show) 0 else 1).toFloat())
+                .alpha((if (show) 1 else 0).toFloat())
                 .setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        view.visibility = if (show) View.GONE else View.VISIBLE
+                        view.visibility = if (show) View.VISIBLE else View.GONE
                     }
                 })
     }
@@ -155,14 +148,23 @@ class LoginActivity : AppCompatActivity() {
      * 登录
      */
     private fun login() {
-        if (!appEtUsername.text.toString().contentEquals("18166668888")) {
-            showProgress(false)
-            appEtUsername.error = getString(R.string.error_invalid_account)
-            appEtUsername.requestFocus()
-        } else if (!appEtPassword.text.toString().contentEquals("123456")) {
-            showProgress(false)
-            appEtPassword.error = getString(R.string.error_invalid_password)
-            appEtPassword.requestFocus()
+        val accountStr = appEtUsername.text.toString()
+        val passwordStr = appEtPassword.text.toString()
+
+        when {
+            accountStr != "18166668888" -> {
+                appEtUsername.error = getString(R.string.error_invalid_account)
+                appEtUsername.requestFocus()
+            }
+            passwordStr != "123456" -> {
+                appEtPassword.error = getString(R.string.error_invalid_password)
+                appEtPassword.requestFocus()
+            }
+            else -> {
+                showProgress(true)
+                loginViewModel.loginRequest(accountStr, passwordStr)
+            }
         }
+
     }
 }
