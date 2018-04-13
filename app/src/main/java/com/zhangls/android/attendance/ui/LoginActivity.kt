@@ -15,6 +15,8 @@ import android.widget.TextView
 import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle
 import com.trello.rxlifecycle2.LifecycleProvider
 import com.zhangls.android.attendance.R
+import com.zhangls.android.attendance.util.closeKeyboard
+import com.zhangls.android.attendance.util.snack
 import com.zhangls.android.attendance.viewmodel.LoginViewModel
 import kotlinx.android.synthetic.main.activity_login.*
 import org.jetbrains.anko.toast
@@ -48,7 +50,7 @@ class LoginActivity : AppCompatActivity() {
 
         // 消息显示监听
         loginViewModel.getToastString().observe(this, Observer {
-            toast(it!!)
+            snack(appBtnLogin, it!!)
         })
         // 登录状态监听
         loginViewModel.loginStatus.observe(this, Observer {
@@ -58,6 +60,7 @@ class LoginActivity : AppCompatActivity() {
 
             if (it) {
                 // 如果返回 true，表明已经登录成功，跳转主页
+                toast(R.string.toastLoginRequestSuccess)
                 MainActivity.activityStart(this@LoginActivity)
                 finish()
             } else {
@@ -83,6 +86,10 @@ class LoginActivity : AppCompatActivity() {
      * 登录判断
      */
     private fun attemptLogin() {
+        // 关闭键盘
+        closeKeyboard(this, appEtUsername)
+        closeKeyboard(this, appEtPassword)
+
         appEtUsername.error = null
         appEtPassword.error = null
 
@@ -162,7 +169,7 @@ class LoginActivity : AppCompatActivity() {
             }
             else -> {
                 showProgress(true)
-                loginViewModel.loginRequest(accountStr, passwordStr)
+                loginViewModel.loginRequest(this, accountStr, passwordStr)
             }
         }
 

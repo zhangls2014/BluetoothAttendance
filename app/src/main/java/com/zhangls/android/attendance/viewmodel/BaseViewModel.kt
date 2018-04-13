@@ -14,7 +14,6 @@ import com.trello.rxlifecycle2.LifecycleProvider
 open class BaseViewModel(application: Application) : AndroidViewModel(application) {
 
     protected lateinit var provider: LifecycleProvider<Lifecycle.Event>
-    protected var context = application.applicationContext
     /**
      * 提示文字
      */

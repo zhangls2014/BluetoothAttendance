@@ -37,11 +37,10 @@ class LoginViewModel(application: Application) : BaseViewModel(application) {
         return password.length >= 6
     }
 
-
     /**
      * 从服务器获取登录信息
      */
-    fun loginRequest(username: String, password: String) {
+    fun loginRequest(context: Context, username: String, password: String) {
         if (!this::baseApiRepository.isInitialized) {
             baseApiRepository = BaseApiRepository(provider)
         }
@@ -64,14 +63,13 @@ class LoginViewModel(application: Application) : BaseViewModel(application) {
                         putString(SharedPreferencesKey.TOKEN,
                                 Base64.encodeToString(t.data.token.toByteArray(), Base64.DEFAULT))
                         putString(SharedPreferencesKey.PHONE_NUM,
-                                Base64.encodeToString(t.data.token.toByteArray(), Base64.DEFAULT))
+                                Base64.encodeToString(t.data.phoneNum.toByteArray(), Base64.DEFAULT))
                         putString(SharedPreferencesKey.USER_ID,
-                                Base64.encodeToString(t.data.token.toByteArray(), Base64.DEFAULT))
+                                Base64.encodeToString(t.data.userId.toByteArray(), Base64.DEFAULT))
                         putString(SharedPreferencesKey.USERNAME,
-                                Base64.encodeToString(t.data.token.toByteArray(), Base64.DEFAULT))
+                                Base64.encodeToString(t.data.userName.toByteArray(), Base64.DEFAULT))
                     }
                     loginStatus.value = true
-                    getToastString().value = context.getString(R.string.toastLoginRequestSuccess)
                 } else {
                     loginStatus.value = false
                     getToastString().value = context.getString(R.string.toastLoginRequestError)
