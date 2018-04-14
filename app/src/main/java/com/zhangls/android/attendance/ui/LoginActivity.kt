@@ -5,6 +5,8 @@ import android.animation.AnimatorListenerAdapter
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
@@ -33,6 +35,15 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var loginViewModel: LoginViewModel
     private val myHandler = Handler()
     private val mLoadingRunnable = Runnable { updateUI() }
+
+
+    companion object {
+
+        fun activityStart(context: Context) {
+            val intent = Intent(context, LoginActivity::class.java)
+            context.startActivity(intent)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -164,7 +175,7 @@ class LoginActivity : AppCompatActivity() {
                 appEtUsername.requestFocus()
             }
             passwordStr != "123456" -> {
-                appEtPassword.error = getString(R.string.error_invalid_password)
+                appEtPassword.error = getString(R.string.error_incorrect_password)
                 appEtPassword.requestFocus()
             }
             else -> {

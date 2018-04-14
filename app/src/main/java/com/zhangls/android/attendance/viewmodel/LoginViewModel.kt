@@ -72,13 +72,13 @@ class LoginViewModel(application: Application) : BaseViewModel(application) {
                     loginStatus.value = true
                 } else {
                     loginStatus.value = false
-                    getToastString().value = context.getString(R.string.toastLoginRequestError)
+                    getToastString().value = context.getString(R.string.toastNetworkError)
                 }
             }
 
             override fun onError(e: Throwable) {
                 loginStatus.value = false
-                getToastString().value = context.getString(R.string.toastLoginRequestError)
+                getToastString().value = context.getString(R.string.toastNetworkError)
             }
         })
     }

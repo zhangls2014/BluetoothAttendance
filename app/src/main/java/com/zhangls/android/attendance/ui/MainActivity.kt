@@ -7,19 +7,33 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
 import android.util.Base64
+import android.view.View
 import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle
 import com.trello.rxlifecycle2.LifecycleProvider
 import com.zhangls.android.attendance.R
+import com.zhangls.android.attendance.model.GroupModel
+import com.zhangls.android.attendance.type.GroupViewBinder
 import com.zhangls.android.attendance.util.SharedPreferencesKey
 import com.zhangls.android.attendance.util.snack
 import com.zhangls.android.attendance.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.android.synthetic.main.activity_main.*
+import me.drakeet.multitype.Items
+import me.drakeet.multitype.MultiTypeAdapter
 
+/**
+ * 主页
+ *
+ * @author zhangls
+ */
 class MainActivity : AppCompatActivity() {
 
     private val provider: LifecycleProvider<Lifecycle.Event> = AndroidLifecycle.createLifecycleProvider(this)
     private lateinit var mainViewModel: MainViewModel
+    private val items = Items()
+    private val adapter = MultiTypeAdapter(items)
 
     companion object {
 
@@ -33,8 +47,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        super.onCreate(savedInstanceState)
 
         // 设置标题
         val preferences = getSharedPreferences(
@@ -45,15 +59,70 @@ class MainActivity : AppCompatActivity() {
             title = String(Base64.decode(username, Base64.DEFAULT))
         }
 
+        // 设置下拉刷新组件的颜色
+        srlRefresh.setColorSchemeResources(R.color.colorAccent,
+                R.color.colorPink,
+                R.color.colorPurple,
+                R.color.colorLime,
+                R.color.colorOrange)
+        srlRefresh.setOnRefreshListener { mainViewModel.groupListRequest(this) }
+
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.setupProvider(provider)
 
+        observeData()
+
+        // 配置 RecyclerView
+        adapter.register(GroupModel::class.java, GroupViewBinder())
+        rvGroupList.layoutManager = LinearLayoutManager(this)
+        rvGroupList.adapter = adapter
+
+        // 显示进度条，获取分组信息
+        mainProgress.show()
+        mainViewModel.groupListRequest(this)
+    }
+
+    /**
+     * 实现 MainViewModel 变量监听
+     */
+    private fun observeData() {
         // 消息显示监听
         mainViewModel.getToastString().observe(this, Observer {
             snack(appBtnLogin, it!!)
         })
-
-        // 获取分组信息
-
+        // 获取分组信息监听
+        mainViewModel.groupStatus.observe(this, Observer {
+            when (it) {
+                MainViewModel.GROUP_STATUS_TOKEN -> {
+                    LoginActivity.activityStart(this)
+                    finish()
+                }
+                MainViewModel.GROUP_STATUS_SUCCESS -> {
+                    if (srlRefresh.isRefreshing) srlRefresh.isRefreshing = false
+                    rvGroupList.visibility = View.VISIBLE
+                    mainProgress.hide()
+                }
+                MainViewModel.GROUP_STATUS_ERROR -> {
+                    if (srlRefresh.isRefreshing) srlRefresh.isRefreshing = false
+                    rvGroupList.visibility = View.VISIBLE
+                    mainProgress.hide()
+                }
+            }
+        })
+        // 分组信息监听
+        mainViewModel.groupList.observe(this, Observer {
+            if (it == null || it.isEmpty()) {
+                snack(rvGroupList, R.string.toastDataEmpty)
+            } else {
+                val size = items.size
+                // 如果之前有数据，则先清除数据，再加载新的数据
+                if (size > 0) {
+                    items.clear()
+                    adapter.notifyItemRangeRemoved(0, size)
+                }
+                items.addAll(it)
+                adapter.notifyItemRangeInserted(0, items.size)
+            }
+        })
     }
 }
