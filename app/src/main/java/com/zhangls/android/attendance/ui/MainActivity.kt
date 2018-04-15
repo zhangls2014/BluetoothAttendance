@@ -12,16 +12,21 @@ import android.util.Base64
 import android.view.View
 import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle
 import com.trello.rxlifecycle2.LifecycleProvider
+import com.zhangls.android.attendance.AbstractDatabase
 import com.zhangls.android.attendance.R
 import com.zhangls.android.attendance.model.GroupModel
 import com.zhangls.android.attendance.type.GroupViewBinder
 import com.zhangls.android.attendance.util.SharedPreferencesKey
 import com.zhangls.android.attendance.util.snack
 import com.zhangls.android.attendance.viewmodel.MainViewModel
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.activity_main.*
 import me.drakeet.multitype.Items
 import me.drakeet.multitype.MultiTypeAdapter
+
 
 /**
  * 主页
@@ -34,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mainViewModel: MainViewModel
     private val items = Items()
     private val adapter = MultiTypeAdapter(items)
+    private lateinit var database: AbstractDatabase
 
     companion object {
 
@@ -69,6 +75,7 @@ class MainActivity : AppCompatActivity() {
 
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.setupProvider(provider)
+        mainViewModel.clearDatabase(this)
 
         observeData()
 
@@ -109,20 +116,30 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-        // 分组信息监听
-        mainViewModel.groupList.observe(this, Observer {
-            if (it == null || it.isEmpty()) {
-                snack(rvGroupList, R.string.toastDataEmpty)
-            } else {
-                val size = items.size
-                // 如果之前有数据，则先清除数据，再加载新的数据
-                if (size > 0) {
-                    items.clear()
-                    adapter.notifyItemRangeRemoved(0, size)
-                }
-                items.addAll(it)
-                adapter.notifyItemRangeInserted(0, items.size)
+
+        Observable.create<Any> {
+            if (!this@MainActivity::database.isInitialized) {
+                database = AbstractDatabase.get(this)
             }
-        })
+        }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    // 分组信息监听
+                    database.groupDao().getAllGroupData().observe(this, Observer {
+                        if (it == null || it.isEmpty()) {
+                            snack(rvGroupList, R.string.toastDataEmpty)
+                        } else {
+                            val size = items.size
+                            // 如果之前有数据，则先清除数据，再加载新的数据
+                            if (size > 0) {
+                                items.clear()
+                                adapter.notifyItemRangeRemoved(0, size)
+                            }
+                            items.addAll(it)
+                            adapter.notifyItemRangeInserted(0, items.size)
+                        }
+                    })
+                })
     }
 }

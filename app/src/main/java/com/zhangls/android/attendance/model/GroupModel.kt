@@ -1,22 +1,27 @@
 package com.zhangls.android.attendance.model
 
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.PrimaryKey
+
 
 /**
  * 分组信息数据结构体
  *
  * @author zhangls
  */
+@Entity(tableName = "grouping")
 data class GroupModel(
         /**
          * ID
          */
-        val groupId: String,
+        @PrimaryKey
+        var groupId: String,
         /**
          * 名称
          */
-        val groupName: String,
+        var groupName: String,
         /**
          * 考勤状态
          */
-        val status: Boolean
+        var status: Boolean
 )
