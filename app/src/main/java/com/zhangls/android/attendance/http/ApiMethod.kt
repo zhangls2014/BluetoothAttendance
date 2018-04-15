@@ -47,7 +47,7 @@ interface ApiMethod {
     @GET("v1/attendanceList1")
     fun attendanceList1(
             @Header("token") token: String,
-            @Query("groupId") groupId: String
+            @Query("groupId") groupId: Int
     ): Observable<BaseModel<ArrayList<UserModel>>>
 
     /**
@@ -60,7 +60,7 @@ interface ApiMethod {
     @GET("v1/attendanceList2")
     fun attendanceList2(
             @Header("token") token: String,
-            @Query("groupId") groupId: String
+            @Query("groupId") groupId: Int
     ): Observable<BaseModel<ArrayList<UserModel>>>
 
     /**
@@ -73,6 +73,6 @@ interface ApiMethod {
     @GET("v1/attendanceList3")
     fun attendanceList3(
             @Header("token") token: String,
-            @Query("groupId") groupId: String
+            @Query("groupId") groupId: Int
     ): Observable<BaseModel<ArrayList<UserModel>>>
 }

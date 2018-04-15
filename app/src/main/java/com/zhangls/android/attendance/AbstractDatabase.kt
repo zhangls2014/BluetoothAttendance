@@ -15,7 +15,7 @@ import com.zhangls.android.attendance.model.UserModel
  *
  * @author zhangls
  */
-@Database(entities = [GroupModel::class, UserModel::class], version = 1)
+@Database(entities = [GroupModel::class, UserModel::class], version = 2)
 abstract class AbstractDatabase : RoomDatabase() {
 
     /**
@@ -44,6 +44,7 @@ abstract class AbstractDatabase : RoomDatabase() {
                         .databaseBuilder(context.applicationContext,
                                 AbstractDatabase::class.java,
                                 "Bluetooth.db")
+                        .allowMainThreadQueries()
                         .build()
             }
             return mAppDatabase!!

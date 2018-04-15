@@ -15,7 +15,7 @@ data class GroupModel(
          * ID
          */
         @PrimaryKey
-        var groupId: String,
+        var groupId: Int,
         /**
          * 名称
          */

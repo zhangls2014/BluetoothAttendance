@@ -5,6 +5,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.util.Base64
 import androidx.core.content.edit
+import com.zhangls.android.attendance.AbstractDatabase
 import com.zhangls.android.attendance.R
 import com.zhangls.android.attendance.http.BaseApiRepository
 import com.zhangls.android.attendance.model.BaseModel
@@ -69,6 +70,14 @@ class LoginViewModel(application: Application) : BaseViewModel(application) {
                         putString(SharedPreferencesKey.USERNAME,
                                 Base64.encodeToString(t.data.userName.toByteArray(), Base64.DEFAULT))
                     }
+                    // 清空数据库
+                    val database = AbstractDatabase.get(context)
+                    // 清空分组
+                    val allGroup = database.groupDao().getAllGroup()
+                    database.groupDao().deleteGroup(allGroup)
+                    // 清空用户
+                    val allUer = database.userDao().getAllUser()
+                    database.userDao().deleteUser(allUer)
                     loginStatus.value = true
                 } else {
                     loginStatus.value = false

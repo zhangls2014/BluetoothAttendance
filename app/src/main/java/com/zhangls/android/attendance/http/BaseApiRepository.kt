@@ -41,7 +41,7 @@ class BaseApiRepository(private val provider: LifecycleProvider<Lifecycle.Event>
     /**
      * @see ApiMethod.attendanceList1
      */
-    fun attendanceList1(token: String, groupId: String,
+    fun attendanceList1(token: String, groupId: Int,
                         observer: Observer<BaseModel<ArrayList<UserModel>>>) {
         ApiService.default
                 .create(ApiMethod::class.java)
@@ -55,7 +55,7 @@ class BaseApiRepository(private val provider: LifecycleProvider<Lifecycle.Event>
     /**
      * @see ApiMethod.attendanceList2
      */
-    fun attendanceList2(token: String, groupId: String,
+    fun attendanceList2(token: String, groupId: Int,
                         observer: Observer<BaseModel<ArrayList<UserModel>>>) {
         ApiService.default
                 .create(ApiMethod::class.java)
@@ -69,7 +69,7 @@ class BaseApiRepository(private val provider: LifecycleProvider<Lifecycle.Event>
     /**
      * @see ApiMethod.attendanceList3
      */
-    fun attendanceList3(token: String, groupId: String,
+    fun attendanceList3(token: String, groupId: Int,
                         observer: Observer<BaseModel<ArrayList<UserModel>>>) {
         ApiService.default
                 .create(ApiMethod::class.java)

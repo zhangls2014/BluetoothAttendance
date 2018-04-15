@@ -12,7 +12,7 @@ import com.zhangls.android.attendance.model.GroupModel
 import com.zhangls.android.attendance.util.SharedPreferencesKey
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
-import org.jetbrains.anko.doAsync
+
 
 /**
  * 主页 ViewModel.
@@ -24,7 +24,16 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
     /**
      * 数据库操作对象
      */
-    private lateinit var database: AbstractDatabase
+    lateinit var database: AbstractDatabase
+    /**
+     * 获取分组信息的状态.
+     *
+     * 1: 获取 groupList 数据成功
+     * 2: token 过期，或者为空
+     * 3: 请求数据异常，网络请求失败
+     */
+    val groupStatus = MutableLiveData<Int>()
+    private lateinit var baseApiRepository: BaseApiRepository
 
 
     companion object {
@@ -43,18 +52,11 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
     }
 
     /**
-     * 分组列表
+     * 初始化数据库
      */
-    val groupList = MutableLiveData<ArrayList<GroupModel>>()
-    /**
-     * 获取分组信息的状态.
-     *
-     * 1: 获取 groupList 数据成功
-     * 2: token 过期，或者为空
-     * 3: 请求数据异常，网络请求失败
-     */
-    val groupStatus = MutableLiveData<Int>()
-    private lateinit var baseApiRepository: BaseApiRepository
+    fun initDatabase(context: Context) {
+        database = AbstractDatabase.get(context)
+    }
 
     /**
      * 获取分组信息
@@ -88,7 +90,6 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
                 override fun onNext(t: BaseModel<ArrayList<GroupModel>>) {
                     if (t.status == 200) {
                         groupStatus.value = GROUP_STATUS_SUCCESS
-                        groupList.value = t.data
                         // 保存分组信息
                         saveGroup(t.data)
                     } else {
@@ -107,32 +108,9 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
     }
 
     /**
-     * 每次用户登录成功时，清空数据库数据（因为没有服务器，导致数据不能实时处理），本操作需要异步
-     */
-    fun clearDatabase(context: Context) {
-        doAsync {
-            if (!this@MainViewModel::database.isInitialized) {
-                database = AbstractDatabase.get(context)
-            }
-            // 清空分组
-            val allGroup = database.groupDao().getAllGroup()
-            database.groupDao().deleteGroup(allGroup)
-            // 清空用户
-            val allUer = database.userDao().getAllUser()
-            database.userDao().deleteUser(allUer)
-        }
-    }
-
-    /**
      * 保存分组信息，异步
      */
     private fun saveGroup(groups: ArrayList<GroupModel>) {
-        doAsync {
-            if (this@MainViewModel::database.isInitialized) {
-                database.groupDao().insertGroup(groups)
-            } else {
-                // 数据库未初始化，出现异常
-            }
-        }
+        database.groupDao().insertGroup(groups)
     }
 }

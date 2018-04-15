@@ -11,9 +11,9 @@ import android.arch.persistence.room.PrimaryKey
 @Entity(tableName = "user")
 data class UserModel(
         @PrimaryKey
-        var userId: String,
+        var userId: Int,
         var userName: String,
         var bleMac: String,
-        var groupId: String,
+        var groupId: Int,
         var groupName: String
 )
