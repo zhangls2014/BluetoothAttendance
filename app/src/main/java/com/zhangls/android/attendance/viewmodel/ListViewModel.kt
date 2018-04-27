@@ -33,6 +33,10 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
      * 3: 请求数据异常，网络请求失败
      */
     val listStatus = MutableLiveData<Int>()
+    /**
+     * 考勤人员信息
+     */
+    val listMember = MutableLiveData<List<UserModel>>()
     private lateinit var baseApiRepository: BaseApiRepository
 
 
@@ -84,6 +88,17 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
             // 获取考勤信息
             getData(token, groupId, QuestObserver(context))
         }
+    }
+
+    /**
+     * 抓取所有的分组成员信息
+     */
+    fun getListMember(context: Context, groupId: Int) {
+        if (!this::database.isInitialized) {
+            database = AbstractDatabase.get(context)
+        }
+        listStatus.value = STATUS_SUCCESS
+        listMember.value = database.userDao().getGroupUser(groupId)
     }
 
     /**

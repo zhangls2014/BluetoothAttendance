@@ -23,5 +23,9 @@ data class GroupModel(
         /**
          * 考勤状态
          */
-        var status: Boolean
+        var status: Boolean,
+        /**
+         * 考勤完成时间
+         */
+        var modifyTime: Long = 0
 )

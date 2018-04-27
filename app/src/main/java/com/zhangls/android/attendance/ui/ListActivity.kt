@@ -46,12 +46,17 @@ class ListActivity : AppCompatActivity() {
          * 分组名称标识符
          */
         private const val GROUP_NAME = "group_name"
+        /**
+         * 是否是查看信息
+         */
+        private const val GROUP_VIEW = "group_view"
 
         /**
          * Activity 入口方法
          */
-        fun activityStart(context: Context, groupId: Int, groupName: String) {
+        fun activityStart(context: Context, isView: Boolean, groupId: Int, groupName: String) {
             val intent = Intent(context, ListActivity::class.java)
+            intent.putExtra(GROUP_VIEW, isView)
             intent.putExtra(GROUP_ID, groupId)
             intent.putExtra(GROUP_NAME, groupName)
 
@@ -73,7 +78,11 @@ class ListActivity : AppCompatActivity() {
                 R.color.colorLime,
                 R.color.colorOrange)
         srlRefresh.setOnRefreshListener {
-            listViewModel.listMemberRequest(this, intent.extras.getInt(GROUP_ID))
+            if (intent.extras.getBoolean(GROUP_VIEW)) {
+                listViewModel.getListMember(this, intent.extras.getInt(GROUP_ID))
+            } else {
+                listViewModel.listMemberRequest(this, intent.extras.getInt(GROUP_ID))
+            }
         }
 
         listViewModel = ViewModelProviders.of(this).get(ListViewModel::class.java)
@@ -83,7 +92,7 @@ class ListActivity : AppCompatActivity() {
         observeData()
 
         // 配置 RecyclerView
-        adapter.register(UserModel::class.java, UserViewBinder())
+        adapter.register(UserModel::class.java, UserViewBinder(intent.extras.getBoolean(GROUP_VIEW)))
         rvGroupList.layoutManager = LinearLayoutManager(this)
         rvGroupList.adapter = adapter
         // 设置动画
@@ -92,7 +101,11 @@ class ListActivity : AppCompatActivity() {
 
         // 显示进度条，获取考勤人员信息
         mainProgress.show()
-        listViewModel.listMemberRequest(this, intent.extras.getInt(GROUP_ID))
+        if (intent.extras.getBoolean(GROUP_VIEW)) {
+            listViewModel.getListMember(this, intent.extras.getInt(GROUP_ID))
+        } else {
+            listViewModel.listMemberRequest(this, intent.extras.getInt(GROUP_ID))
+        }
     }
 
     /**
@@ -129,16 +142,28 @@ class ListActivity : AppCompatActivity() {
                     if (it == null || it.isEmpty()) {
                         snack(rvGroupList, R.string.toastDataEmpty)
                     } else {
-                        val size = items.size
-                        // 如果之前有数据，则先清除数据，再加载新的数据
-                        if (size > 0) {
-                            items.clear()
-                            adapter.notifyItemRangeRemoved(0, size)
-                        }
-                        items.addAll(it)
-                        adapter.notifyItemRangeInserted(0, items.size)
-                        rvGroupList.scheduleLayoutAnimation()
+                        loadData(it)
                     }
                 })
+        // 获取本地数据
+        listViewModel.listMember.observe(this, Observer {
+            if (it == null || it.isEmpty()) {
+                snack(rvGroupList, R.string.toastDataEmpty)
+            } else {
+                loadData(it)
+            }
+        })
+    }
+
+    private fun loadData(it: List<UserModel>) {
+        val size = items.size
+        // 如果之前有数据，则先清除数据，再加载新的数据
+        if (size > 0) {
+            items.clear()
+            adapter.notifyItemRangeRemoved(0, size)
+        }
+        items.addAll(it)
+        adapter.notifyItemRangeInserted(0, items.size)
+        rvGroupList.scheduleLayoutAnimation()
     }
 }

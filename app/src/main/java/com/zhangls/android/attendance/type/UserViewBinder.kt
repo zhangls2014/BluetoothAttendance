@@ -21,7 +21,7 @@ import java.util.*
  *
  * @author zhangls
  */
-class UserViewBinder : ItemViewBinder<UserModel, UserViewBinder.ViewHolder>() {
+class UserViewBinder(private val isView: Boolean) : ItemViewBinder<UserModel, UserViewBinder.ViewHolder>() {
 
     override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder {
         val root = inflater.inflate(R.layout.item_user, parent, false)
@@ -45,7 +45,7 @@ class UserViewBinder : ItemViewBinder<UserModel, UserViewBinder.ViewHolder>() {
             holder.status.text = context.getString(R.string.groupAttendanceUnstarted)
             holder.status.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
 
-            holder.operate.visibility = View.VISIBLE
+            holder.operate.visibility = if (isView) View.GONE else View.VISIBLE
             holder.operate.text = context.getString(R.string.groupAttendanceStart)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
             holder.operate.setOnClickListener({ })

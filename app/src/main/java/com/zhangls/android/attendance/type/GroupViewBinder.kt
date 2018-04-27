@@ -13,6 +13,8 @@ import com.zhangls.android.attendance.ui.ListActivity
 
 import me.drakeet.multitype.ItemViewBinder
 import org.jetbrains.anko.find
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 /**
@@ -31,6 +33,9 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
         val context = holder.itemView.context
 
         holder.name.text = group.groupName
+        val date = Date(if (group.modifyTime == 0L) System.currentTimeMillis() else group.modifyTime)
+        val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        holder.time.text = format.format(date)
         if (group.status) {
             holder.status.text = context.getString(R.string.groupAttendanceCompleted)
             holder.status.setTextColor(ContextCompat.getColor(context, R.color.colorOrange))
@@ -38,7 +43,7 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
             holder.operate.text = context.getString(R.string.groupAttendanceRecord)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorOrange))
             holder.operate.setOnClickListener({
-
+                ListActivity.activityStart(context, true, group.groupId, group.groupName)
             })
         } else {
             holder.status.text = context.getString(R.string.groupAttendanceUnstarted)
@@ -47,7 +52,7 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
             holder.operate.text = context.getString(R.string.groupAttendanceStart)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
             holder.operate.setOnClickListener({
-                ListActivity.activityStart(context, group.groupId, group.groupName)
+                ListActivity.activityStart(context, true, group.groupId, group.groupName)
             })
         }
     }
@@ -55,6 +60,7 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: TextView = itemView.find(R.id.tvName)
         val status: TextView = itemView.find(R.id.tvStatus)
+        val time: TextView = itemView.find(R.id.tvTime)
         val operate: TextView = itemView.find(R.id.tvOperate)
     }
 }
