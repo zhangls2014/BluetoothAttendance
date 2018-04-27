@@ -21,7 +21,7 @@ interface UserDao {
     fun insertUser(userModel: List<UserModel>)
 
     /**
-     * 获取所有数据
+     * 获取指定分组下的所有数据
      *
      * @return 数据列表
      */
@@ -29,12 +29,20 @@ interface UserDao {
     fun getAllUser(): List<UserModel>
 
     /**
-     * 获取所有数据
+     * 获取指定分组下的所有数据
      *
      * @return 数据列表
      */
-    @Query("SELECT * FROM user")
-    fun getAllUserData(): LiveData<List<UserModel>>
+    @Query("SELECT * FROM user WHERE groupId = :id")
+    fun getGroupUser(id: Int): List<UserModel>
+
+    /**
+     * 获取指定分组下的所有数据
+     *
+     * @return 数据列表
+     */
+    @Query("SELECT * FROM user WHERE groupId = :id")
+    fun getGroupUserData(id: Int): LiveData<List<UserModel>>
 
     /**
      * 删除数据
