@@ -15,5 +15,7 @@ data class UserModel(
         var userName: String,
         var bleMac: String,
         var groupId: Int,
-        var groupName: String
+        var groupName: String,
+        var status: Boolean = false,
+        var modifyTime: Long = 0
 )

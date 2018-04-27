@@ -40,15 +40,15 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
         /**
          * 请求成功
          */
-        const val GROUP_STATUS_SUCCESS = 1
+        const val STATUS_SUCCESS = 1
         /**
          * token 问题
          */
-        const val GROUP_STATUS_TOKEN = 2
+        const val STATUS_TOKEN = 2
         /**
          * 请求出错
          */
-        const val GROUP_STATUS_ERROR = 3
+        const val STATUS_ERROR = 3
     }
 
     /**
@@ -72,7 +72,7 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
                 Context.MODE_PRIVATE)
         val encodeToken = preferences.getString(SharedPreferencesKey.TOKEN, "")
         if (encodeToken.isEmpty()) {
-            groupStatus.value = GROUP_STATUS_TOKEN
+            groupStatus.value = STATUS_TOKEN
             getToastString().value = context.getString(R.string.toastTokenError)
         } else {
             // 读取 token，并解密
@@ -89,28 +89,20 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
 
                 override fun onNext(t: BaseModel<ArrayList<GroupModel>>) {
                     if (t.status == 200) {
-                        groupStatus.value = GROUP_STATUS_SUCCESS
+                        groupStatus.value = STATUS_SUCCESS
                         // 保存分组信息
-                        saveGroup(t.data)
+                        database.groupDao().insertGroup(t.data)
                     } else {
-                        groupStatus.value = GROUP_STATUS_ERROR
+                        groupStatus.value = STATUS_ERROR
                         getToastString().value = context.getString(R.string.toastNetworkError)
                     }
                 }
 
                 override fun onError(e: Throwable) {
-                    groupStatus.value = GROUP_STATUS_ERROR
+                    groupStatus.value = STATUS_ERROR
                     getToastString().value = context.getString(R.string.toastNetworkError)
                 }
             })
         }
-
-    }
-
-    /**
-     * 保存分组信息，异步
-     */
-    private fun saveGroup(groups: ArrayList<GroupModel>) {
-        database.groupDao().insertGroup(groups)
     }
 }

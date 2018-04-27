@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Base64
 import android.view.View
+import android.view.animation.AnimationUtils
 import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle
 import com.trello.rxlifecycle2.LifecycleProvider
 import com.zhangls.android.attendance.R
@@ -78,6 +79,8 @@ class MainActivity : AppCompatActivity() {
         adapter.register(GroupModel::class.java, GroupViewBinder())
         rvGroupList.layoutManager = LinearLayoutManager(this)
         rvGroupList.adapter = adapter
+        rvGroupList.layoutAnimation =
+                AnimationUtils.loadLayoutAnimation(this, R.anim.layout_anim_full_down)
 
         // 显示进度条，获取分组信息
         mainProgress.show()
@@ -95,16 +98,16 @@ class MainActivity : AppCompatActivity() {
         // 获取分组信息监听
         mainViewModel.groupStatus.observe(this, Observer {
             when (it) {
-                MainViewModel.GROUP_STATUS_TOKEN -> {
+                MainViewModel.STATUS_TOKEN -> {
                     LoginActivity.activityStart(this)
                     finish()
                 }
-                MainViewModel.GROUP_STATUS_SUCCESS -> {
+                MainViewModel.STATUS_SUCCESS -> {
                     if (srlRefresh.isRefreshing) srlRefresh.isRefreshing = false
                     rvGroupList.visibility = View.VISIBLE
                     mainProgress.hide()
                 }
-                MainViewModel.GROUP_STATUS_ERROR -> {
+                MainViewModel.STATUS_ERROR -> {
                     if (srlRefresh.isRefreshing) srlRefresh.isRefreshing = false
                     rvGroupList.visibility = View.VISIBLE
                     mainProgress.hide()
@@ -125,6 +128,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 items.addAll(it)
                 adapter.notifyItemRangeInserted(0, items.size)
+                rvGroupList.scheduleLayoutAnimation()
             }
         })
     }

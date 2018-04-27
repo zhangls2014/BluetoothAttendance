@@ -15,7 +15,7 @@ import com.zhangls.android.attendance.model.UserModel
  *
  * @author zhangls
  */
-@Database(entities = [GroupModel::class, UserModel::class], version = 2)
+@Database(entities = [GroupModel::class, UserModel::class], version = 3)
 abstract class AbstractDatabase : RoomDatabase() {
 
     /**
