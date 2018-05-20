@@ -1,13 +1,13 @@
-package com.zhangls.android.attendance
+package com.zhangls.android.attendance.db
 
 import android.arch.persistence.room.Database
 import android.arch.persistence.room.Room
 import android.arch.persistence.room.RoomDatabase
 import android.content.Context
-import com.zhangls.android.attendance.dao.GroupDao
-import com.zhangls.android.attendance.dao.UserDao
-import com.zhangls.android.attendance.model.GroupModel
-import com.zhangls.android.attendance.model.UserModel
+import com.zhangls.android.attendance.db.dao.GroupDao
+import com.zhangls.android.attendance.db.dao.UserDao
+import com.zhangls.android.attendance.db.entity.GroupModel
+import com.zhangls.android.attendance.db.entity.UserModel
 
 
 /**
@@ -35,19 +35,18 @@ abstract class AbstractDatabase : RoomDatabase() {
 
     companion object {
 
+        @Volatile
         private var mAppDatabase: AbstractDatabase? = null
 
-        @Synchronized
-        fun get(context: Context): AbstractDatabase {
-            if (mAppDatabase == null) {
-                mAppDatabase = Room
-                        .databaseBuilder(context.applicationContext,
-                                AbstractDatabase::class.java,
-                                "Bluetooth.db")
-                        .allowMainThreadQueries()
+        fun getInstance(context: Context): AbstractDatabase =
+                mAppDatabase ?: synchronized(this) {
+                    mAppDatabase ?: buildDatabase(context).also { mAppDatabase = it }
+                }
+
+        private fun buildDatabase(context: Context) =
+                Room.databaseBuilder(context.applicationContext,
+                        AbstractDatabase::class.java,
+                        "Bluetooth.db")
                         .build()
-            }
-            return mAppDatabase!!
-        }
     }
 }

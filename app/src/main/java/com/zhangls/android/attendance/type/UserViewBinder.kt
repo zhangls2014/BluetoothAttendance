@@ -6,11 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.zhangls.android.attendance.db.AbstractDatabase
 
 import com.zhangls.android.attendance.R
-import com.zhangls.android.attendance.model.UserModel
+import com.zhangls.android.attendance.db.entity.UserModel
 
 import me.drakeet.multitype.ItemViewBinder
+import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.find
 import java.text.SimpleDateFormat
 import java.util.*
@@ -48,10 +50,19 @@ class UserViewBinder(private val isView: Boolean) : ItemViewBinder<UserModel, Us
             holder.operate.visibility = if (isView) View.GONE else View.VISIBLE
             holder.operate.text = context.getString(R.string.groupAttendanceStart)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
-            holder.operate.setOnClickListener({ })
+            holder.operate.setOnClickListener({
+                // 教师可以通过手动点击考勤按钮给学生考勤
+                doAsync {
+                    val database = AbstractDatabase.getInstance(context)
+
+                    user.status = true
+                    user.modifyTime = System.currentTimeMillis()
+
+                    database.userDao().updateUser(user)
+                }
+            })
         }
     }
-
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: TextView = itemView.find(R.id.tvName)

@@ -14,7 +14,7 @@ import android.view.animation.AnimationUtils
 import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle
 import com.trello.rxlifecycle2.LifecycleProvider
 import com.zhangls.android.attendance.R
-import com.zhangls.android.attendance.model.GroupModel
+import com.zhangls.android.attendance.db.entity.GroupModel
 import com.zhangls.android.attendance.type.GroupViewBinder
 import com.zhangls.android.attendance.util.SharedPreferencesKey
 import com.zhangls.android.attendance.util.snack
@@ -22,6 +22,7 @@ import com.zhangls.android.attendance.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import me.drakeet.multitype.Items
 import me.drakeet.multitype.MultiTypeAdapter
+import org.jetbrains.anko.doAsync
 
 
 /**
@@ -67,7 +68,13 @@ class MainActivity : AppCompatActivity() {
                 R.color.colorPurple,
                 R.color.colorLime,
                 R.color.colorOrange)
-        srlRefresh.setOnRefreshListener { mainViewModel.groupListRequest(this) }
+        srlRefresh.setOnRefreshListener {
+            doAsync {
+                val allGroup = mainViewModel.database.groupDao().getAllGroup()
+                loadData(allGroup)
+                srlRefresh.isRefreshing = false
+            }
+        }
 
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.setupProvider(provider)
@@ -117,19 +124,26 @@ class MainActivity : AppCompatActivity() {
 
         // 分组信息监听
         mainViewModel.database.groupDao().getAllGroupData().observe(this, Observer {
-            if (it == null || it.isEmpty()) {
-                snack(rvGroupList, R.string.toastDataEmpty)
-            } else {
-                val size = items.size
-                // 如果之前有数据，则先清除数据，再加载新的数据
-                if (size > 0) {
-                    items.clear()
-                    adapter.notifyItemRangeRemoved(0, size)
-                }
-                items.addAll(it)
-                adapter.notifyItemRangeInserted(0, items.size)
-                rvGroupList.scheduleLayoutAnimation()
-            }
+            loadData(it)
         })
+    }
+
+    /**
+     * 加载数据
+     */
+    private fun loadData(it: List<GroupModel>?) {
+        if (it == null || it.isEmpty()) {
+            snack(rvGroupList, R.string.toastDataEmpty)
+        } else {
+            val size = items.size
+            // 如果之前有数据，则先清除数据，再加载新的数据
+            if (size > 0) {
+                items.clear()
+                adapter.notifyItemRangeRemoved(0, size)
+            }
+            items.addAll(it)
+            adapter.notifyItemRangeInserted(0, items.size)
+            rvGroupList.scheduleLayoutAnimation()
+        }
     }
 }

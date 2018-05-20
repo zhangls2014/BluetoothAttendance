@@ -1,4 +1,4 @@
-package com.zhangls.android.attendance.model
+package com.zhangls.android.attendance.db.entity
 
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey

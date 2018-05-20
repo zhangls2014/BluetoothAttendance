@@ -17,4 +17,11 @@
     <string name="groupAttendanceRecord">查看</string>
     <string name="groupAttendanceStart">考勤</string>
     <string name="groupAttendanceUnstarted">未考勤</string>
+    <string name="menu_title_attenance_completed">结束考勤</string>
+    <string name="devices_does_not_support_bluetooth">该设备不支持蓝牙功能，暂时无法考勤！</string>
+    <string name="title_alert_bluetooth_warning">提示</string>
+    <string name="permission_location_reason">由于系统设置要求，获取蓝牙扫描结果需要位置信息权限，不授予该权限则无法获取蓝牙扫描结果！</string>
+    <string name="title_alert_bluetooth_permission">权限申请</string>
+    <string name="groupAttendance">考勤</string>
+    <string name="groupAttendanceFinish">考勤已经结束，点击确认退出</string>
 </resources>

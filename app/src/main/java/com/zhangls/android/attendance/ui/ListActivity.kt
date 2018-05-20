@@ -1,19 +1,29 @@
 package com.zhangls.android.attendance.ui
 
+import android.app.Activity
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
 import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle
 import com.trello.rxlifecycle2.LifecycleProvider
+import com.yanzhenjie.permission.AndPermission
+import com.yanzhenjie.permission.Permission
 import com.zhangls.android.attendance.R
-import com.zhangls.android.attendance.model.UserModel
+import com.zhangls.android.attendance.db.entity.UserModel
 import com.zhangls.android.attendance.type.UserViewBinder
 import com.zhangls.android.attendance.util.snack
 import com.zhangls.android.attendance.viewmodel.ListViewModel
@@ -21,6 +31,10 @@ import com.zhangls.android.attendance.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import me.drakeet.multitype.Items
 import me.drakeet.multitype.MultiTypeAdapter
+import org.jetbrains.anko.alert
+import org.jetbrains.anko.noButton
+import org.jetbrains.anko.toast
+import org.jetbrains.anko.yesButton
 
 
 /**
@@ -34,6 +48,21 @@ class ListActivity : AppCompatActivity() {
     private lateinit var listViewModel: ListViewModel
     private val items = Items()
     private val adapter = MultiTypeAdapter(items)
+    private val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    /**
+     * 创建一个广播接收器，接受蓝牙扫描到的信息
+     */
+    private val mReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val action = intent?.action
+            if (BluetoothDevice.ACTION_FOUND == action) {
+                // 扫描到设备
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                Log.d("bluetooth======", "${device.name} address is ${device.address}")
+                listViewModel.attendance(intent.extras.getInt(GROUP_ID), device.address.orEmpty())
+            }
+        }
+    }
 
 
     companion object {
@@ -50,6 +79,10 @@ class ListActivity : AppCompatActivity() {
          * 是否是查看信息
          */
         private const val GROUP_VIEW = "group_view"
+        /**
+         * 请求码
+         */
+        private const val REQUEST_ENABLE_BT = 1
 
         /**
          * Activity 入口方法
@@ -78,11 +111,7 @@ class ListActivity : AppCompatActivity() {
                 R.color.colorLime,
                 R.color.colorOrange)
         srlRefresh.setOnRefreshListener {
-            if (intent.extras.getBoolean(GROUP_VIEW)) {
-                listViewModel.getListMember(this, intent.extras.getInt(GROUP_ID))
-            } else {
-                listViewModel.listMemberRequest(this, intent.extras.getInt(GROUP_ID))
-            }
+            listViewModel.getListMember(this, intent.extras.getInt(GROUP_ID))
         }
 
         listViewModel = ViewModelProviders.of(this).get(ListViewModel::class.java)
@@ -104,6 +133,7 @@ class ListActivity : AppCompatActivity() {
         if (intent.extras.getBoolean(GROUP_VIEW)) {
             listViewModel.getListMember(this, intent.extras.getInt(GROUP_ID))
         } else {
+            openBluetooth()
             listViewModel.listMemberRequest(this, intent.extras.getInt(GROUP_ID))
         }
     }
@@ -163,7 +193,121 @@ class ListActivity : AppCompatActivity() {
             adapter.notifyItemRangeRemoved(0, size)
         }
         items.addAll(it)
-        adapter.notifyItemRangeInserted(0, items.size)
-        rvGroupList.scheduleLayoutAnimation()
+        adapter.notifyDataSetChanged()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (!intent.extras.getBoolean(GROUP_VIEW)) {
+            menuInflater.inflate(R.menu.menu_attendance, menu)
+            return true
+        }
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.menu_attendance -> {
+                listViewModel.completedAttendance(this, intent.extras.getInt(GROUP_ID))
+                alert(R.string.groupAttendanceFinish) {
+                    isCancelable = false
+                    titleResource = R.string.groupAttendance
+                    yesButton { finish() }
+                }.show()
+            }
+            else -> {
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    /**
+     * 打开蓝牙
+     */
+    private fun openBluetooth() {
+        if (mBluetoothAdapter == null) {
+            // 如果该设备不支持蓝牙设备
+            // 显示对话框
+            alert(R.string.devices_does_not_support_bluetooth) {
+                title = getString(R.string.title_alert_bluetooth_warning)
+                yesButton {
+                    // 退出界面
+                    finish()
+                }
+            }.show()
+            return
+        }
+
+        // 启用蓝牙
+        if (!mBluetoothAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+        } else {
+            getPermissions()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == Activity.RESULT_OK) {
+                toast("蓝牙打开成功")
+                getPermissions()
+            } else {
+                toast("蓝牙未开启，无法考勤")
+                // 退出该界面
+                finish()
+            }
+        }
+    }
+
+    /**
+     * 扫描附近设备
+     */
+    private fun scanDevices() {
+        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        registerReceiver(mReceiver, filter)
+        mBluetoothAdapter.startDiscovery()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        if (!intent.extras.getBoolean(GROUP_VIEW)) {
+            // 在退出界面的时候关闭蓝牙扫描功能
+            mBluetoothAdapter.cancelDiscovery()
+
+            unregisterReceiver(mReceiver)
+        }
+    }
+
+    /**
+     * 位置权限
+     */
+    private fun getPermissions() {
+        AndPermission.with(this)
+                .permission(Permission.ACCESS_COARSE_LOCATION)
+                .onGranted({
+                    scanDevices()
+                })
+                .onDenied({ permissions ->
+                    if (AndPermission.hasAlwaysDeniedPermission(this, permissions)) {
+                        // 权限申请被拒绝时，检查，若勾选了始终拒绝权限授予，则弹出提示框
+                        val settingService = AndPermission.permissionSetting(this)
+                        alert(R.string.permission_location_reason) {
+                            title = getString(R.string.title_alert_bluetooth_permission)
+                            yesButton { settingService.execute() }
+                            noButton { settingService.cancel() }
+                        }.show()
+                    }
+                })
+                .rationale({ _, _, executor ->
+                    // 弹出权限申请说明提示框
+                    alert(R.string.permission_location_reason) {
+                        title = getString(R.string.title_alert_bluetooth_permission)
+                        yesButton { executor.execute() }
+                        noButton { executor.cancel() }
+                    }.show()
+                })
+                .start()
     }
 }

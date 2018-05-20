@@ -4,14 +4,15 @@ import android.app.Application
 import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.util.Base64
-import com.zhangls.android.attendance.AbstractDatabase
+import com.zhangls.android.attendance.db.AbstractDatabase
 import com.zhangls.android.attendance.R
 import com.zhangls.android.attendance.http.BaseApiRepository
 import com.zhangls.android.attendance.model.BaseModel
-import com.zhangls.android.attendance.model.GroupModel
+import com.zhangls.android.attendance.db.entity.GroupModel
 import com.zhangls.android.attendance.util.SharedPreferencesKey
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
+import org.jetbrains.anko.doAsync
 
 
 /**
@@ -55,7 +56,7 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
      * 初始化数据库
      */
     fun initDatabase(context: Context) {
-        database = AbstractDatabase.get(context)
+        database = AbstractDatabase.getInstance(context)
     }
 
     /**
@@ -90,8 +91,10 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
                 override fun onNext(t: BaseModel<ArrayList<GroupModel>>) {
                     if (t.status == 200) {
                         groupStatus.value = STATUS_SUCCESS
-                        // 保存分组信息
-                        database.groupDao().insertGroup(t.data)
+                        doAsync {
+                            // 保存分组信息
+                            database.groupDao().insertGroup(t.data)
+                        }
                     } else {
                         groupStatus.value = STATUS_ERROR
                         getToastString().value = context.getString(R.string.toastNetworkError)

@@ -1,9 +1,9 @@
 package com.zhangls.android.attendance.http
 
 import com.zhangls.android.attendance.model.BaseModel
-import com.zhangls.android.attendance.model.GroupModel
+import com.zhangls.android.attendance.db.entity.GroupModel
 import com.zhangls.android.attendance.model.LoginModel
-import com.zhangls.android.attendance.model.UserModel
+import com.zhangls.android.attendance.db.entity.UserModel
 import io.reactivex.Observable
 import retrofit2.http.*
 

@@ -1,8 +1,8 @@
-package com.zhangls.android.attendance.dao
+package com.zhangls.android.attendance.db.dao
 
 import android.arch.lifecycle.LiveData
 import android.arch.persistence.room.*
-import com.zhangls.android.attendance.model.UserModel
+import com.zhangls.android.attendance.db.entity.UserModel
 
 /**
  * 用户信息 Dao 类
@@ -19,6 +19,9 @@ interface UserDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertUser(userModel: List<UserModel>)
+
+    @Update
+    fun updateUser(userModel: UserModel)
 
     /**
      * 获取指定分组下的所有数据
@@ -49,4 +52,10 @@ interface UserDao {
      */
     @Delete
     fun deleteUser(userModel: List<UserModel>)
+
+    /**
+     * 查询指定分组下特定的蓝牙 MAC 地址的人员
+     */
+    @Query("SELECT * FROM user WHERE groupId = :id AND bleMac = :mac LIMIT 1")
+    fun attendance(id: Int, mac: String): UserModel?
 }

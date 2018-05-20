@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 
 import com.zhangls.android.attendance.R
-import com.zhangls.android.attendance.model.GroupModel
+import com.zhangls.android.attendance.db.entity.GroupModel
 import com.zhangls.android.attendance.ui.ListActivity
 
 import me.drakeet.multitype.ItemViewBinder
@@ -52,7 +52,7 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
             holder.operate.text = context.getString(R.string.groupAttendanceStart)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
             holder.operate.setOnClickListener({
-                ListActivity.activityStart(context, true, group.groupId, group.groupName)
+                ListActivity.activityStart(context, false, group.groupId, group.groupName)
             })
         }
     }

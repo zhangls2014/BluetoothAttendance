@@ -1,8 +1,8 @@
-package com.zhangls.android.attendance.dao
+package com.zhangls.android.attendance.db.dao
 
 import android.arch.lifecycle.LiveData
 import android.arch.persistence.room.*
-import com.zhangls.android.attendance.model.GroupModel
+import com.zhangls.android.attendance.db.entity.GroupModel
 
 /**
  * 分组信息 Dao 类
@@ -41,4 +41,10 @@ interface GroupDao {
      */
     @Delete
     fun deleteGroup(userModel: List<GroupModel>)
+
+    /**
+     * 查询某一个分组数据
+     */
+    @Query("SELECT * FROM grouping WHERE groupId = :groupId LIMIT 1")
+    fun queryGroup(groupId: Int): GroupModel
 }

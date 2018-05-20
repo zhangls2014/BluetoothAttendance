@@ -3,9 +3,9 @@ package com.zhangls.android.attendance.http
 import android.arch.lifecycle.Lifecycle
 import com.trello.rxlifecycle2.LifecycleProvider
 import com.zhangls.android.attendance.model.BaseModel
-import com.zhangls.android.attendance.model.GroupModel
+import com.zhangls.android.attendance.db.entity.GroupModel
 import com.zhangls.android.attendance.model.LoginModel
-import com.zhangls.android.attendance.model.UserModel
+import com.zhangls.android.attendance.db.entity.UserModel
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers

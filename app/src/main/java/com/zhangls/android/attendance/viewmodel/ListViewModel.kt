@@ -4,14 +4,16 @@ import android.app.Application
 import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.util.Base64
-import com.zhangls.android.attendance.AbstractDatabase
+import com.zhangls.android.attendance.db.AbstractDatabase
 import com.zhangls.android.attendance.R
 import com.zhangls.android.attendance.http.BaseApiRepository
 import com.zhangls.android.attendance.model.BaseModel
-import com.zhangls.android.attendance.model.UserModel
+import com.zhangls.android.attendance.db.entity.UserModel
 import com.zhangls.android.attendance.util.SharedPreferencesKey
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
 
 /**
@@ -59,7 +61,7 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
      * 初始化数据库
      */
     fun initDatabase(context: Context) {
-        database = AbstractDatabase.get(context)
+        database = AbstractDatabase.getInstance(context)
     }
 
     /**
@@ -95,10 +97,13 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
      */
     fun getListMember(context: Context, groupId: Int) {
         if (!this::database.isInitialized) {
-            database = AbstractDatabase.get(context)
+            database = AbstractDatabase.getInstance(context)
         }
         listStatus.value = STATUS_SUCCESS
-        listMember.value = database.userDao().getGroupUser(groupId)
+        doAsync {
+            val user = database.userDao().getGroupUser(groupId)
+            uiThread { listMember.value = user }
+        }
     }
 
     /**
@@ -131,8 +136,10 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
         override fun onNext(t: BaseModel<ArrayList<UserModel>>) {
             if (t.status == 200) {
                 listStatus.value = STATUS_SUCCESS
-                // 保存考勤人员信息
-                database.userDao().insertUser(t.data)
+                doAsync {
+                    // 保存考勤人员信息
+                    database.userDao().insertUser(t.data)
+                }
             } else {
                 listStatus.value = STATUS_ERROR
                 getToastString().value = context.getString(R.string.toastNetworkError)
@@ -142,6 +149,42 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
         override fun onError(e: Throwable) {
             listStatus.value = STATUS_ERROR
             getToastString().value = context.getString(R.string.toastNetworkError)
+        }
+    }
+
+    /**
+     * 停止考勤
+     */
+    fun completedAttendance(context: Context, groupId: Int) {
+        doAsync {
+            if (!this@ListViewModel::database.isInitialized) {
+                database = AbstractDatabase.getInstance(context)
+            }
+
+            val group = database.groupDao().queryGroup(groupId)
+            group.status = true
+            group.modifyTime = System.currentTimeMillis()
+            database.groupDao().insertGroup(listOf(group))
+        }
+    }
+
+    /**
+     * 考勤
+     *
+     * @param id 分组 ID
+     * @param bleMac 扫描的蓝牙 MAC 地址
+     */
+    fun attendance(id: Int, bleMac: String) {
+        doAsync {
+            val userModel = database.userDao().attendance(id, bleMac)
+            if(userModel == null) {
+                return@doAsync
+            }
+
+            userModel.status = true
+            userModel.modifyTime = System.currentTimeMillis()
+
+            database.userDao().updateUser(userModel)
         }
     }
 }
