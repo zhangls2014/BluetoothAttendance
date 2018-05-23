@@ -76,11 +76,9 @@ class LoginViewModel(application: Application) : BaseViewModel(application) {
                         // 清空数据库
                         val database = AbstractDatabase.getInstance(context)
                         // 清空分组
-                        val allGroup = database.groupDao().getAllGroup()
-                        database.groupDao().deleteGroup(allGroup)
+                        database.groupDao().deleteGroup()
                         // 清空用户
-                        val allUer = database.userDao().getAllUser()
-                        database.userDao().deleteUser(allUer)
+                        database.userDao().deleteUser()
                         uiThread { loginStatus.value = true }
                     }
                 } else {

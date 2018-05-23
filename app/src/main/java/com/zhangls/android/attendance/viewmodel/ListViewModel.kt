@@ -96,13 +96,15 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
      * 抓取所有的分组成员信息
      */
     fun getListMember(context: Context, groupId: Int) {
-        if (!this::database.isInitialized) {
-            database = AbstractDatabase.getInstance(context)
-        }
-        listStatus.value = STATUS_SUCCESS
         doAsync {
+            if (!this@ListViewModel::database.isInitialized) {
+                database = AbstractDatabase.getInstance(context)
+            }
             val user = database.userDao().getGroupUser(groupId)
-            uiThread { listMember.value = user }
+            uiThread {
+                listMember.value = user
+                listStatus.value = STATUS_SUCCESS
+            }
         }
     }
 
@@ -177,14 +179,13 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
     fun attendance(id: Int, bleMac: String) {
         doAsync {
             val userModel = database.userDao().attendance(id, bleMac)
-            if(userModel == null) {
-                return@doAsync
+
+            if (userModel != null) {
+                userModel.status = true
+                userModel.modifyTime = System.currentTimeMillis()
+
+                database.userDao().updateUser(userModel)
             }
-
-            userModel.status = true
-            userModel.modifyTime = System.currentTimeMillis()
-
-            database.userDao().updateUser(userModel)
         }
     }
 }

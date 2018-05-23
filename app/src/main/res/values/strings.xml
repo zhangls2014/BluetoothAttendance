@@ -24,4 +24,7 @@
     <string name="title_alert_bluetooth_permission">权限申请</string>
     <string name="groupAttendance">考勤</string>
     <string name="groupAttendanceFinish">考勤已经结束，点击确认退出</string>
+    <string name="groupAttendanceProcessing">正在进行考勤，您是否要结束考勤？</string>
+    <string name="attendanceWarning">考勤提示</string>
+    <string name="attendanceFinishAlertYesButton">结束</string>
 </resources>

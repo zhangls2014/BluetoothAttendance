@@ -31,10 +31,7 @@ import com.zhangls.android.attendance.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import me.drakeet.multitype.Items
 import me.drakeet.multitype.MultiTypeAdapter
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.noButton
-import org.jetbrains.anko.toast
-import org.jetbrains.anko.yesButton
+import org.jetbrains.anko.*
 
 
 /**
@@ -49,6 +46,7 @@ class ListActivity : AppCompatActivity() {
     private val items = Items()
     private val adapter = MultiTypeAdapter(items)
     private val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    private var groupId: Int = 0
     /**
      * 创建一个广播接收器，接受蓝牙扫描到的信息
      */
@@ -59,7 +57,7 @@ class ListActivity : AppCompatActivity() {
                 // 扫描到设备
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                 Log.d("bluetooth======", "${device.name} address is ${device.address}")
-                listViewModel.attendance(intent.extras.getInt(GROUP_ID), device.address.orEmpty())
+                listViewModel.attendance(groupId, device.address.orEmpty())
             }
         }
     }
@@ -103,6 +101,7 @@ class ListActivity : AppCompatActivity() {
 
         // 设置标题
         title = intent.extras.getString(GROUP_NAME)
+        groupId = intent.extras.getInt(GROUP_ID)
 
         // 设置下拉刷新组件的颜色
         srlRefresh.setColorSchemeResources(R.color.colorAccent,
@@ -111,7 +110,7 @@ class ListActivity : AppCompatActivity() {
                 R.color.colorLime,
                 R.color.colorOrange)
         srlRefresh.setOnRefreshListener {
-            listViewModel.getListMember(this, intent.extras.getInt(GROUP_ID))
+            listViewModel.getListMember(this, groupId)
         }
 
         listViewModel = ViewModelProviders.of(this).get(ListViewModel::class.java)
@@ -131,10 +130,10 @@ class ListActivity : AppCompatActivity() {
         // 显示进度条，获取考勤人员信息
         mainProgress.show()
         if (intent.extras.getBoolean(GROUP_VIEW)) {
-            listViewModel.getListMember(this, intent.extras.getInt(GROUP_ID))
+            listViewModel.getListMember(this, groupId)
         } else {
             openBluetooth()
-            listViewModel.listMemberRequest(this, intent.extras.getInt(GROUP_ID))
+            listViewModel.listMemberRequest(this, groupId)
         }
     }
 
@@ -167,7 +166,7 @@ class ListActivity : AppCompatActivity() {
         })
 
         // 分组信息监听
-        listViewModel.database.userDao().getGroupUserData(intent.extras.getInt(GROUP_ID))
+        listViewModel.database.userDao().getGroupUserData(groupId)
                 .observe(this, Observer {
                     if (it == null || it.isEmpty()) {
                         snack(rvGroupList, R.string.toastDataEmpty)
@@ -207,7 +206,7 @@ class ListActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.menu_attendance -> {
-                listViewModel.completedAttendance(this, intent.extras.getInt(GROUP_ID))
+                listViewModel.completedAttendance(this, groupId)
                 alert(R.string.groupAttendanceFinish) {
                     isCancelable = false
                     titleResource = R.string.groupAttendance
@@ -277,6 +276,24 @@ class ListActivity : AppCompatActivity() {
             mBluetoothAdapter.cancelDiscovery()
 
             unregisterReceiver(mReceiver)
+        }
+    }
+
+    override fun onBackPressed() {
+        // 如果是查看考勤结果时，返回键退出
+        // 如果是考勤时，返回键提示结束考勤
+        if (intent.extras.getBoolean(GROUP_VIEW)) {
+            super.onBackPressed()
+        } else {
+            alert(R.string.groupAttendanceProcessing) {
+                titleResource = R.string.attendanceWarning
+                yesButton {
+                    titleResource = R.string.attendanceFinishAlertYesButton
+                    listViewModel.completedAttendance(this@ListActivity, groupId)
+                    finish()
+                }
+                cancelButton {  }
+            }.show()
         }
     }
 

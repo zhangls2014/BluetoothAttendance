@@ -39,8 +39,8 @@ interface GroupDao {
     /**
      * 删除数据
      */
-    @Delete
-    fun deleteGroup(userModel: List<GroupModel>)
+    @Query("DELETE FROM grouping")
+    fun deleteGroup()
 
     /**
      * 查询某一个分组数据

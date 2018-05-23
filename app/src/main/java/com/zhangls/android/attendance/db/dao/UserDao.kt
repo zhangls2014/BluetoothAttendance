@@ -50,12 +50,12 @@ interface UserDao {
     /**
      * 删除数据
      */
-    @Delete
-    fun deleteUser(userModel: List<UserModel>)
+    @Query("DELETE FROM user")
+    fun deleteUser()
 
     /**
      * 查询指定分组下特定的蓝牙 MAC 地址的人员
      */
-    @Query("SELECT * FROM user WHERE groupId = :id AND bleMac = :mac LIMIT 1")
+    @Query("SELECT * FROM user WHERE groupId = :id AND bleMac LIKE :mac LIMIT 1")
     fun attendance(id: Int, mac: String): UserModel?
 }
