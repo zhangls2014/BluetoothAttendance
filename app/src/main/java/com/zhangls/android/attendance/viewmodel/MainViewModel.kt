@@ -108,4 +108,16 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
             })
         }
     }
+
+    /**
+     * 添加分组
+     *
+     * @param groupName 分组名称
+     */
+    fun addGroup(groupName: String) {
+        doAsync {
+            val groupModel = GroupModel(0, groupName, false, System.currentTimeMillis())
+            database.groupDao().insertGroup(groupModel)
+        }
+    }
 }

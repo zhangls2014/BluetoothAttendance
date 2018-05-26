@@ -27,4 +27,21 @@
     <string name="groupAttendanceProcessing">正在进行考勤，您是否要结束考勤？</string>
     <string name="attendanceWarning">考勤提示</string>
     <string name="attendanceFinishAlertYesButton">结束</string>
+    <string name="bluetoothScanFailed">蓝牙扫描失败，是否重试？</string>
+    <string name="bluetoothScanRetry">重试</string>
+    <string name="addGroupTitle">添加分组</string>
+    <string name="addGroupContent">请在下方输入框中输入新分组的名称</string>
+    <string name="hintGroupName">请输入分组名称</string>
+    <string name="toastGroupNameEmpty">分组名称不能为空</string>
+    <string name="titleAddActivity">添加考勤人员信息</string>
+    <string name="prompt_name">学生姓名</string>
+    <string name="prompt_bluetooth_mac">蓝牙 MAC 地址</string>
+    <string name="prompt_parent_phone">家长联系电话</string>
+    <string name="menu_title_add_save">保存</string>
+    <string name="error_invalid_name">请输入姓名</string>
+    <string name="error_invalid_mac">请输入正确的 MAC 地址</string>
+    <string name="error_invalid_student_id">学生 ID 不能为空</string>
+    <string name="toastSaveSuccess">保存成功</string>
+    <string name="prompt_student_id">学生编号</string>
+    <string name="error_invalid_parent_phone">请输入 11 位手机号</string>
 </resources>

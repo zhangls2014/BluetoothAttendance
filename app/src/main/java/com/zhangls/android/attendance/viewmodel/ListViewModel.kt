@@ -186,6 +186,10 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
 
                 database.userDao().updateUser(userModel)
             }
+            // 判断是否是已经
+            if (database.userDao().attendanceFinish() == null) {
+
+            }
         }
     }
 }

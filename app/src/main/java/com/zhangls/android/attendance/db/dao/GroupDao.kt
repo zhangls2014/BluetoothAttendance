@@ -21,6 +21,14 @@ interface GroupDao {
     fun insertGroup(groupModel: List<GroupModel>)
 
     /**
+     * 添加分组数据
+     *
+     * @param groupModel 分组
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertGroup(groupModel: GroupModel)
+
+    /**
      * 获取所有数据
      *
      * @return 数据列表
@@ -47,4 +55,10 @@ interface GroupDao {
      */
     @Query("SELECT * FROM grouping WHERE groupId = :groupId LIMIT 1")
     fun queryGroup(groupId: Int): GroupModel
+
+    /**
+     * 更新所有分组
+     */
+    @Update
+    fun updateGroup(groupModel: List<GroupModel>)
 }

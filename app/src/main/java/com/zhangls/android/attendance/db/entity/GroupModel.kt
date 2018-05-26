@@ -14,7 +14,7 @@ data class GroupModel(
         /**
          * ID
          */
-        @PrimaryKey
+        @PrimaryKey(autoGenerate = true)
         var groupId: Int,
         /**
          * 名称

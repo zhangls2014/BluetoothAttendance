@@ -5,11 +5,10 @@ import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.content.BroadcastReceiver
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -47,17 +46,31 @@ class ListActivity : AppCompatActivity() {
     private val adapter = MultiTypeAdapter(items)
     private val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     private var groupId: Int = 0
+    private var groupView: Boolean = false
+    private var groupName: String = ""
     /**
-     * 创建一个广播接收器，接受蓝牙扫描到的信息
+     * 接受蓝牙扫描到的信息
      */
-    private val mReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val action = intent?.action
-            if (BluetoothDevice.ACTION_FOUND == action) {
-                // 扫描到设备
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                Log.d("bluetooth======", "${device.name} address is ${device.address}")
-                listViewModel.attendance(groupId, device.address.orEmpty())
+    private val mCallback = object : ScanCallback() {
+        override fun onScanFailed(errorCode: Int) {
+            Log.d("onScanFailed======", "errorCode is $errorCode")
+            alert(R.string.bluetoothScanFailed) {
+                titleResource = R.string.attendanceWarning
+                yesButton {
+                    titleResource = R.string.bluetoothScanRetry
+                    openBluetooth()
+                }
+                cancelButton {
+                    finish()
+                }
+                isCancelable = false
+            }.show()
+        }
+
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            if (result != null) {
+                Log.d("bluetooth======", "${ result.device.name } address is ${ result.device.address }")
+                listViewModel.attendance(groupId, result.device.address.orEmpty())
             }
         }
     }
@@ -99,9 +112,14 @@ class ListActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         super.onCreate(savedInstanceState)
 
-        // 设置标题
-        title = intent.extras.getString(GROUP_NAME)
+        groupName = intent.extras.getString(GROUP_NAME)
         groupId = intent.extras.getInt(GROUP_ID)
+        groupView = intent.extras.getBoolean(GROUP_VIEW)
+        if (groupView) {
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        }
+        // 设置标题
+        title = groupName
 
         // 设置下拉刷新组件的颜色
         srlRefresh.setColorSchemeResources(R.color.colorAccent,
@@ -120,20 +138,35 @@ class ListActivity : AppCompatActivity() {
         observeData()
 
         // 配置 RecyclerView
-        adapter.register(UserModel::class.java, UserViewBinder(intent.extras.getBoolean(GROUP_VIEW)))
+        adapter.register(UserModel::class.java, UserViewBinder(groupView))
         rvGroupList.layoutManager = LinearLayoutManager(this)
         rvGroupList.adapter = adapter
         // 设置动画
         rvGroupList.layoutAnimation =
                 AnimationUtils.loadLayoutAnimation(this, R.anim.layout_anim_full_down)
 
+        fabAdd.setOnClickListener { AddActivity.activityStart(this, groupId, groupName) }
+
         // 显示进度条，获取考勤人员信息
         mainProgress.show()
-        if (intent.extras.getBoolean(GROUP_VIEW)) {
+        if (groupView) {
             listViewModel.getListMember(this, groupId)
         } else {
             openBluetooth()
-            listViewModel.listMemberRequest(this, groupId)
+            if (groupId > 3) {
+                listViewModel.getListMember(this, groupId)
+            } else {
+                listViewModel.listMemberRequest(this, groupId)
+            }
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return if (item?.itemId == android.R.id.home) {
+            finish()
+            true
+        } else {
+            super.onOptionsItemSelected(item)
         }
     }
 
@@ -196,27 +229,11 @@ class ListActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        if (!intent.extras.getBoolean(GROUP_VIEW)) {
+        if (!groupView) {
             menuInflater.inflate(R.menu.menu_attendance, menu)
             return true
         }
         return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
-            R.id.menu_attendance -> {
-                listViewModel.completedAttendance(this, groupId)
-                alert(R.string.groupAttendanceFinish) {
-                    isCancelable = false
-                    titleResource = R.string.groupAttendance
-                    yesButton { finish() }
-                }.show()
-            }
-            else -> {
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     /**
@@ -237,11 +254,11 @@ class ListActivity : AppCompatActivity() {
         }
 
         // 启用蓝牙
-        if (!mBluetoothAdapter.isEnabled) {
+        if (mBluetoothAdapter.isEnabled) {
+            getPermissions()
+        } else {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
-        } else {
-            getPermissions()
         }
     }
 
@@ -263,26 +280,22 @@ class ListActivity : AppCompatActivity() {
      * 扫描附近设备
      */
     private fun scanDevices() {
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        registerReceiver(mReceiver, filter)
-        mBluetoothAdapter.startDiscovery()
+        mBluetoothAdapter.bluetoothLeScanner.startScan(mCallback)
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
-        if (!intent.extras.getBoolean(GROUP_VIEW)) {
+        if (!groupView) {
             // 在退出界面的时候关闭蓝牙扫描功能
-            mBluetoothAdapter.cancelDiscovery()
-
-            unregisterReceiver(mReceiver)
+            mBluetoothAdapter.bluetoothLeScanner.stopScan(mCallback)
         }
     }
 
     override fun onBackPressed() {
         // 如果是查看考勤结果时，返回键退出
         // 如果是考勤时，返回键提示结束考勤
-        if (intent.extras.getBoolean(GROUP_VIEW)) {
+        if (groupView) {
             super.onBackPressed()
         } else {
             alert(R.string.groupAttendanceProcessing) {
@@ -302,6 +315,7 @@ class ListActivity : AppCompatActivity() {
      */
     private fun getPermissions() {
         AndPermission.with(this)
+                .runtime()
                 .permission(Permission.ACCESS_COARSE_LOCATION)
                 .onGranted({
                     scanDevices()
@@ -309,11 +323,18 @@ class ListActivity : AppCompatActivity() {
                 .onDenied({ permissions ->
                     if (AndPermission.hasAlwaysDeniedPermission(this, permissions)) {
                         // 权限申请被拒绝时，检查，若勾选了始终拒绝权限授予，则弹出提示框
-                        val settingService = AndPermission.permissionSetting(this)
                         alert(R.string.permission_location_reason) {
                             title = getString(R.string.title_alert_bluetooth_permission)
-                            yesButton { settingService.execute() }
-                            noButton { settingService.cancel() }
+                            yesButton {
+                                AndPermission.with(this@ListActivity)
+                                        .runtime()
+                                        .setting()
+                                        .onComeback {
+
+                                        }
+                                        .start()
+                            }
+                            noButton { finish() }
                         }.show()
                     }
                 })
@@ -322,7 +343,10 @@ class ListActivity : AppCompatActivity() {
                     alert(R.string.permission_location_reason) {
                         title = getString(R.string.title_alert_bluetooth_permission)
                         yesButton { executor.execute() }
-                        noButton { executor.cancel() }
+                        noButton {
+                            executor.cancel()
+                            finish()
+                        }
                     }.show()
                 })
                 .start()

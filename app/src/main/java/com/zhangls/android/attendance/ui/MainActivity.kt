@@ -22,7 +22,7 @@ import com.zhangls.android.attendance.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import me.drakeet.multitype.Items
 import me.drakeet.multitype.MultiTypeAdapter
-import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.*
 
 
 /**
@@ -60,6 +60,35 @@ class MainActivity : AppCompatActivity() {
         val username = preferences.getString(SharedPreferencesKey.USERNAME, "")
         if (username.isNotEmpty()) {
             title = String(Base64.decode(username, Base64.DEFAULT))
+        }
+        // 添加分组按钮
+        fabAdd.setOnClickListener {
+            alert(R.string.addGroupContent) {
+                titleResource = R.string.addGroupTitle
+                isCancelable = false
+
+                customView {
+                    linearLayout {
+                        val group = editText {
+                            hint = getString(R.string.hintGroupName)
+                            padding = dip(8)
+                        }.lparams(width = matchParent) {
+                            marginStart = dip(24)
+                            marginEnd = dip(24)
+                        }
+
+                        yesButton {
+                            if (group.text.toString().isEmpty()) {
+                                snack(fabAdd, R.string.toastGroupNameEmpty)
+                            } else {
+                                mainViewModel.addGroup(group.text.toString())
+                            }
+                        }
+                    }
+                }
+
+                cancelButton {  }
+            }.show()
         }
 
         // 设置下拉刷新组件的颜色

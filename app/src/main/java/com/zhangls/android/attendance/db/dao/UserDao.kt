@@ -20,6 +20,14 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertUser(userModel: List<UserModel>)
 
+    /**
+     * 添加用户数据
+     *
+     * @param userModel 用户
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertUser(userModel: UserModel)
+
     @Update
     fun updateUser(userModel: UserModel)
 
@@ -58,4 +66,16 @@ interface UserDao {
      */
     @Query("SELECT * FROM user WHERE groupId = :id AND bleMac LIKE :mac LIMIT 1")
     fun attendance(id: Int, mac: String): UserModel?
+
+    /**
+     * 查询未考勤的人
+     */
+    @Query("SELECT * FROM user WHERE status = 0")
+    fun attendanceFinish(): List<UserModel>?
+
+    /**
+     * 更新 UserModel
+     */
+    @Update
+    fun updateUser(userModel: List<UserModel>)
 }

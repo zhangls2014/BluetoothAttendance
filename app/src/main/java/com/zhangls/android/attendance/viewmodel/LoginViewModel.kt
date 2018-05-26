@@ -73,12 +73,20 @@ class LoginViewModel(application: Application) : BaseViewModel(application) {
                             putString(SharedPreferencesKey.USERNAME,
                                     Base64.encodeToString(t.data.userName.toByteArray(), Base64.DEFAULT))
                         }
-                        // 清空数据库
                         val database = AbstractDatabase.getInstance(context)
-                        // 清空分组
-                        database.groupDao().deleteGroup()
-                        // 清空用户
-                        database.userDao().deleteUser()
+                        // 修改分组状态，将已考勤修改为未考勤
+                        val groups = database.groupDao().getAllGroup()
+                        for (model in groups) {
+                            model.status = false
+                        }
+                        database.groupDao().updateGroup(groups)
+                        // 修改 User 状态，将已考勤状态修改为未考勤
+                        val users = database.userDao().getAllUser()
+                        for (user in users) {
+                            user.status = false
+                        }
+                        database.userDao().updateUser(users)
+
                         uiThread { loginStatus.value = true }
                     }
                 } else {
