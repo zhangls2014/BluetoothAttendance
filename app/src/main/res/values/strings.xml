@@ -44,4 +44,13 @@
     <string name="toastSaveSuccess">保存成功</string>
     <string name="prompt_student_id">学生编号</string>
     <string name="error_invalid_parent_phone">请输入 11 位手机号</string>
+    <string name="formatAttendanceRatio">已考勤：%1$d / 未考勤：%2$d</string>
+    <string name="titleUserInfo">个人信息</string>
+    <string name="formatUserName">姓名：%s</string>
+    <string name="formatLecMac">蓝牙 MAC：%s</string>
+    <string name="formatGroupName">分组名称：%s</string>
+    <string name="formatStudentId">学号：%s</string>
+    <string name="formatParentPhone">家长联系电话：%s</string>
+    <string name="formatStatus">状态：%s</string>
+    <string name="formatTime">时间：%s</string>
 </resources>

@@ -161,12 +161,32 @@ class ListActivity : AppCompatActivity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (!groupView) {
+            menuInflater.inflate(R.menu.menu_attendance, menu)
+            return true
+        }
+        return super.onCreateOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        return if (item?.itemId == android.R.id.home) {
-            finish()
-            true
-        } else {
-            super.onOptionsItemSelected(item)
+        when (item?.itemId) {
+            R.id.menu_attendance -> {
+                listViewModel.completedAttendance(this, groupId)
+                alert(R.string.groupAttendanceFinish) {
+                    isCancelable = false
+                    titleResource = R.string.groupAttendance
+                    yesButton { finish() }
+                }.show()
+                return true
+            }
+            android.R.id.home -> {
+                finish()
+                return true
+            }
+            else -> {
+                return super.onOptionsItemSelected(item)
+            }
         }
     }
 
@@ -215,6 +235,16 @@ class ListActivity : AppCompatActivity() {
                 loadData(it)
             }
         })
+
+        listViewModel.attendanceFinish.observe(this, Observer {
+            if (it != null && it) {
+                alert(R.string.groupAttendanceFinish) {
+                    isCancelable = false
+                    titleResource = R.string.groupAttendance
+                    yesButton { finish() }
+                }.show()
+            }
+        })
     }
 
     private fun loadData(it: List<UserModel>) {
@@ -226,14 +256,6 @@ class ListActivity : AppCompatActivity() {
         }
         items.addAll(it)
         adapter.notifyDataSetChanged()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        if (!groupView) {
-            menuInflater.inflate(R.menu.menu_attendance, menu)
-            return true
-        }
-        return super.onCreateOptionsMenu(menu)
     }
 
     /**

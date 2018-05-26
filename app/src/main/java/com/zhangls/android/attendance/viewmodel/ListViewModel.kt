@@ -39,6 +39,7 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
      * 考勤人员信息
      */
     val listMember = MutableLiveData<List<UserModel>>()
+    val attendanceFinish = MutableLiveData<Boolean>()
     private lateinit var baseApiRepository: BaseApiRepository
 
 
@@ -62,6 +63,8 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
      */
     fun initDatabase(context: Context) {
         database = AbstractDatabase.getInstance(context)
+
+        attendanceFinish.value = false
     }
 
     /**
@@ -186,9 +189,14 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
 
                 database.userDao().updateUser(userModel)
             }
-            // 判断是否是已经
-            if (database.userDao().attendanceFinish() == null) {
-
+            if (!attendanceFinish.value!!) {
+                // 判断该分组内是否存在未考勤人员，如果不错在则结束考勤
+                if (database.userDao().attendanceFinish(id) == null
+                        || database.userDao().attendanceFinish(id)?.size == 0) {
+                    uiThread {
+                        attendanceFinish.value = true
+                    }
+                }
             }
         }
     }

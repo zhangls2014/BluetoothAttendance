@@ -45,7 +45,7 @@ interface UserDao {
      * @return 数据列表
      */
     @Query("SELECT * FROM user WHERE groupId = :id")
-    fun getGroupUser(id: Int): List<UserModel>
+    fun getGroupUser(id: Int): List<UserModel>?
 
     /**
      * 获取指定分组下的所有数据
@@ -70,8 +70,8 @@ interface UserDao {
     /**
      * 查询未考勤的人
      */
-    @Query("SELECT * FROM user WHERE status = 0")
-    fun attendanceFinish(): List<UserModel>?
+    @Query("SELECT * FROM user WHERE status = 0 AND groupId = :id")
+    fun attendanceFinish(id: Int): List<UserModel>?
 
     /**
      * 更新 UserModel

@@ -8,11 +8,14 @@ import android.view.ViewGroup
 import android.widget.TextView
 
 import com.zhangls.android.attendance.R
+import com.zhangls.android.attendance.db.AbstractDatabase
 import com.zhangls.android.attendance.db.entity.GroupModel
 import com.zhangls.android.attendance.ui.ListActivity
 
 import me.drakeet.multitype.ItemViewBinder
+import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.find
+import org.jetbrains.anko.uiThread
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,6 +42,31 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
         if (group.status) {
             holder.status.text = context.getString(R.string.groupAttendanceCompleted)
             holder.status.setTextColor(ContextCompat.getColor(context, R.color.colorOrange))
+            doAsync {
+                val database = AbstractDatabase.getInstance(context)
+                val user = database.userDao().getGroupUser(group.groupId)
+                val attendance = database.userDao().attendanceFinish(group.groupId)
+                uiThread {
+                    holder.count.visibility = View.VISIBLE
+                    when {
+                        user == null -> holder.count.text = String.format(
+                                context.getString(R.string.formatAttendanceRatio),
+                                0,
+                                0
+                        )
+                        attendance == null -> holder.count.text = String.format(
+                                context.getString(R.string.formatAttendanceRatio),
+                                user.size,
+                                user.size
+                        )
+                        else -> holder.count.text = String.format(
+                                context.getString(R.string.formatAttendanceRatio),
+                                user.size - attendance.size,
+                                user.size
+                        )
+                    }
+                }
+            }
 
             holder.operate.text = context.getString(R.string.groupAttendanceRecord)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorOrange))
@@ -46,6 +74,8 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
                 ListActivity.activityStart(context, true, group.groupId, group.groupName)
             })
         } else {
+            holder.count.visibility = View.GONE
+
             holder.status.text = context.getString(R.string.groupAttendanceUnstarted)
             holder.status.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
 
@@ -62,5 +92,6 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
         val status: TextView = itemView.find(R.id.tvStatus)
         val time: TextView = itemView.find(R.id.tvTime)
         val operate: TextView = itemView.find(R.id.tvOperate)
+        val count: TextView = itemView.find(R.id.tvCount)
     }
 }

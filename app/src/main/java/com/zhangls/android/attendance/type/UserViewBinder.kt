@@ -1,6 +1,8 @@
 package com.zhangls.android.attendance.type
 
+import android.databinding.DataBindingUtil
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +11,7 @@ import android.widget.TextView
 import com.zhangls.android.attendance.db.AbstractDatabase
 
 import com.zhangls.android.attendance.R
+import com.zhangls.android.attendance.databinding.ItemUserInfoBinding
 import com.zhangls.android.attendance.db.entity.UserModel
 
 import me.drakeet.multitype.ItemViewBinder
@@ -38,18 +41,41 @@ class UserViewBinder(private val isView: Boolean) : ItemViewBinder<UserModel, Us
         val date = Date(if (user.modifyTime == 0L) System.currentTimeMillis() else user.modifyTime)
         val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         holder.time.text = format.format(date)
-        if (user.status) {
-            holder.status.text = context.getString(R.string.groupAttendanceCompleted)
+        if (user.status || isView) {
+            holder.status.text = if (user.status) {
+                context.getString(R.string.groupAttendanceCompleted)
+            } else {
+                context.getString(R.string.groupAttendanceUnstarted)
+            }
             holder.status.setTextColor(ContextCompat.getColor(context, R.color.colorOrange))
 
-            holder.operate.visibility = View.GONE
+            holder.operate.text = context.getString(R.string.groupAttendanceRecord)
+            holder.operate.setOnClickListener {
+                val binding = DataBindingUtil.inflate<ItemUserInfoBinding>(
+                        LayoutInflater.from(context),
+                        R.layout.item_user_info,
+                        null,
+                        false)
+                binding.user = user
+                binding.tvTime.text = String.format(
+                        context.getString(R.string.formatTime),
+                        format.format(date)
+                )
+
+                AlertDialog.Builder(context)
+                        .setCancelable(true)
+                        .setTitle(R.string.titleUserInfo)
+                        .setView(binding.root)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .create()
+                        .show()
+            }
         } else {
             holder.status.text = context.getString(R.string.groupAttendanceUnstarted)
             holder.status.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
 
             holder.operate.visibility = if (isView) View.GONE else View.VISIBLE
             holder.operate.text = context.getString(R.string.groupAttendanceStart)
-            holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
             holder.operate.setOnClickListener({
                 // 教师可以通过手动点击考勤按钮给学生考勤
                 doAsync {
