@@ -21,10 +21,10 @@
     <string name="devices_does_not_support_bluetooth">该设备不支持蓝牙功能，暂时无法考勤！</string>
     <string name="title_alert_bluetooth_warning">提示</string>
     <string name="permission_location_reason">由于系统设置要求，获取蓝牙扫描结果需要位置信息权限，不授予该权限则无法获取蓝牙扫描结果！</string>
-    <string name="title_alert_bluetooth_permission">权限申请</string>
+    <string name="title_alert_permission">权限申请</string>
     <string name="groupAttendance">考勤</string>
-    <string name="groupAttendanceFinish">考勤已经结束，点击确认退出</string>
-    <string name="groupAttendanceProcessing">正在进行考勤，您是否要结束考勤？</string>
+    <string name="groupAttendanceFinish">考勤已经结束，请拍摄一张照片作为以后查验的依据</string>
+    <string name="groupAttendanceProcessing">正在进行考勤，您是否要结束考勤？\n结束考勤需要拍摄一张照片作为以后查验的依据</string>
     <string name="attendanceWarning">考勤提示</string>
     <string name="attendanceFinishAlertYesButton">结束</string>
     <string name="bluetoothScanFailed">蓝牙扫描失败，是否重试？</string>
@@ -53,4 +53,10 @@
     <string name="formatParentPhone">家长联系电话：%s</string>
     <string name="formatStatus">状态：%s</string>
     <string name="formatTime">时间：%s</string>
+    <string name="provider_name">cn.zhangls.android.attendance.fileprovider</string>
+    <string name="permission_storage_reason">应用需要将拍摄的照片保存到外部存储中，所以需要 存储空间 权限，请授权给我们吧！ </string>
+    <string name="toastImageSaveSuccess">照片保存成功</string>
+    <string name="toastImageSaveFail">照片未保存</string>
+    <string name="menu_title_picture">查看照片</string>
+    <string name="toastUploadSuccess">文件上传成功</string>
 </resources>

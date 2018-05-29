@@ -200,4 +200,28 @@ class ListViewModel(application: Application) : BaseViewModel(application) {
             }
         }
     }
+
+    /**
+     * 添加照片路径
+     *
+     * @param path 照片路径
+     * @param id 分组 ID
+     */
+    fun addFilePath(path: String, id: Int) {
+        doAsync {
+            val group = database.groupDao().queryGroup(id)
+
+            group.imagePath = path
+            database.groupDao().insertGroup(group)
+        }
+    }
+
+    /**
+     * 获取照片路径
+     *
+     * @param id 分组 ID
+     */
+    fun getFilePath(id: Int): String {
+        return database.groupDao().queryGroup(id).imagePath.orEmpty()
+    }
 }

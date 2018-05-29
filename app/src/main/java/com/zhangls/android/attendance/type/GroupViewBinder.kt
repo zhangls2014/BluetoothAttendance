@@ -57,12 +57,12 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
                         attendance == null -> holder.count.text = String.format(
                                 context.getString(R.string.formatAttendanceRatio),
                                 user.size,
-                                user.size
+                                0
                         )
                         else -> holder.count.text = String.format(
                                 context.getString(R.string.formatAttendanceRatio),
                                 user.size - attendance.size,
-                                user.size
+                                attendance.size
                         )
                     }
                 }

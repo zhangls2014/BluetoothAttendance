@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -24,6 +25,8 @@ import com.yanzhenjie.permission.Permission
 import com.zhangls.android.attendance.R
 import com.zhangls.android.attendance.db.entity.UserModel
 import com.zhangls.android.attendance.type.UserViewBinder
+import com.zhangls.android.attendance.util.IntentUtils
+import com.zhangls.android.attendance.util.UriParseUtils
 import com.zhangls.android.attendance.util.snack
 import com.zhangls.android.attendance.viewmodel.ListViewModel
 import com.zhangls.android.attendance.viewmodel.MainViewModel
@@ -48,6 +51,7 @@ class ListActivity : AppCompatActivity() {
     private var groupId: Int = 0
     private var groupView: Boolean = false
     private var groupName: String = ""
+    private var imageUri: Uri? = null
     /**
      * 接受蓝牙扫描到的信息
      */
@@ -94,6 +98,10 @@ class ListActivity : AppCompatActivity() {
          * 请求码
          */
         private const val REQUEST_ENABLE_BT = 1
+        /**
+         * 打开相机请求码
+         */
+        private const val REQUEST_IMAGE_CAPTURE = 2211
 
         /**
          * Activity 入口方法
@@ -162,11 +170,13 @@ class ListActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_attendance, menu)
         if (!groupView) {
-            menuInflater.inflate(R.menu.menu_attendance, menu)
-            return true
+            menu!!.findItem(R.id.menu_picture).isVisible = false
+        } else {
+            menu!!.findItem(R.id.menu_attendance).isVisible = false
         }
-        return super.onCreateOptionsMenu(menu)
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -176,8 +186,12 @@ class ListActivity : AppCompatActivity() {
                 alert(R.string.groupAttendanceFinish) {
                     isCancelable = false
                     titleResource = R.string.groupAttendance
-                    yesButton { finish() }
+                    yesButton { getStoragePermissions() }
                 }.show()
+                return true
+            }
+            R.id.menu_picture -> {
+                PictureActivity.activityStart(this, listViewModel.getFilePath(groupId))
                 return true
             }
             android.R.id.home -> {
@@ -241,7 +255,7 @@ class ListActivity : AppCompatActivity() {
                 alert(R.string.groupAttendanceFinish) {
                     isCancelable = false
                     titleResource = R.string.groupAttendance
-                    yesButton { finish() }
+                    yesButton { getStoragePermissions() }
                 }.show()
             }
         })
@@ -295,6 +309,14 @@ class ListActivity : AppCompatActivity() {
                 // 退出该界面
                 finish()
             }
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
+            if(resultCode == Activity.RESULT_OK) {
+                listViewModel.addFilePath(UriParseUtils.getPathWithUri(this, imageUri!!), groupId)
+                finish()
+                toast(R.string.toastImageSaveSuccess)
+            } else {
+                toast(R.string.toastImageSaveFail)
+            }
         }
     }
 
@@ -325,9 +347,9 @@ class ListActivity : AppCompatActivity() {
                 yesButton {
                     titleResource = R.string.attendanceFinishAlertYesButton
                     listViewModel.completedAttendance(this@ListActivity, groupId)
-                    finish()
+                    getStoragePermissions()
                 }
-                cancelButton {  }
+                cancelButton {}
             }.show()
         }
     }
@@ -346,7 +368,7 @@ class ListActivity : AppCompatActivity() {
                     if (AndPermission.hasAlwaysDeniedPermission(this, permissions)) {
                         // 权限申请被拒绝时，检查，若勾选了始终拒绝权限授予，则弹出提示框
                         alert(R.string.permission_location_reason) {
-                            title = getString(R.string.title_alert_bluetooth_permission)
+                            title = getString(R.string.title_alert_permission)
                             yesButton {
                                 AndPermission.with(this@ListActivity)
                                         .runtime()
@@ -363,7 +385,7 @@ class ListActivity : AppCompatActivity() {
                 .rationale({ _, _, executor ->
                     // 弹出权限申请说明提示框
                     alert(R.string.permission_location_reason) {
-                        title = getString(R.string.title_alert_bluetooth_permission)
+                        title = getString(R.string.title_alert_permission)
                         yesButton { executor.execute() }
                         noButton {
                             executor.cancel()
@@ -372,5 +394,52 @@ class ListActivity : AppCompatActivity() {
                     }.show()
                 })
                 .start()
+    }
+
+    /**
+     * 存储空间权限
+     */
+    private fun getStoragePermissions() {
+        AndPermission.with(this)
+                .runtime()
+                .permission(Permission.WRITE_EXTERNAL_STORAGE)
+                .onGranted({
+                    openCamera()
+                })
+                .onDenied({ permissions ->
+                    if (AndPermission.hasAlwaysDeniedPermission(this, permissions)) {
+                        // 权限申请被拒绝时，检查，若勾选了始终拒绝权限授予，则弹出提示框
+                        alert(R.string.permission_storage_reason) {
+                            title = getString(R.string.title_alert_permission)
+                            yesButton {
+                                AndPermission.with(this@ListActivity)
+                                        .runtime()
+                                        .setting()
+                                        .onComeback {
+
+                                        }
+                                        .start()
+                            }
+                            noButton {}
+                        }.show()
+                    }
+                })
+                .rationale({ _, _, executor ->
+                    // 弹出权限申请说明提示框
+                    alert(R.string.permission_storage_reason) {
+                        title = getString(R.string.title_alert_permission)
+                        yesButton { executor.execute() }
+                        noButton { executor.cancel() }
+                    }.show()
+                })
+                .start()
+    }
+
+    /**
+     * 打开相机
+     */
+    private fun openCamera() {
+        imageUri = UriParseUtils.convertToFileProvider(this, UriParseUtils.getTempImageUri(this))
+        startActivityForResult(IntentUtils.getCaptureIntent(imageUri!!), REQUEST_IMAGE_CAPTURE)
     }
 }

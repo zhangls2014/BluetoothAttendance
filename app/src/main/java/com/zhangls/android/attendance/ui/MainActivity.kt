@@ -173,6 +173,12 @@ class MainActivity : AppCompatActivity() {
             items.addAll(it)
             adapter.notifyItemRangeInserted(0, items.size)
             rvGroupList.scheduleLayoutAnimation()
+
+            it.forEach {
+                if (it.status && !it.upload) {
+                    mainViewModel.updateGroup(this@MainActivity, it.groupId)
+                }
+            }
         }
     }
 }

@@ -61,4 +61,10 @@ interface GroupDao {
      */
     @Update
     fun updateGroup(groupModel: List<GroupModel>)
+
+    /**
+     * 更新分组
+     */
+    @Update
+    fun updateGroup(groupModel: GroupModel)
 }

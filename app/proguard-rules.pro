@@ -22,6 +22,7 @@
 
 # Model 变量
 -keep public class com.zhangls.android.attendance.model.** { *; }
+-keep public class com.zhangls.android.attendance.db.entity.** { *; }
 # 将所有的文件移至包名下
 -repackageclasses com.zhangls.android.attendance
 

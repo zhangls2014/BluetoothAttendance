@@ -1,6 +1,7 @@
 package com.zhangls.android.attendance.db.entity
 
 import android.arch.persistence.room.Entity
+import android.arch.persistence.room.Ignore
 import android.arch.persistence.room.PrimaryKey
 
 
@@ -27,5 +28,13 @@ data class GroupModel(
         /**
          * 考勤完成时间
          */
-        var modifyTime: Long = 0
+        var modifyTime: Long = 0,
+        /**
+         * 照片路径
+         */
+        var imagePath: String? = null,
+        /**
+         * 是否已经上传
+         */
+        var upload: Boolean = false
 )

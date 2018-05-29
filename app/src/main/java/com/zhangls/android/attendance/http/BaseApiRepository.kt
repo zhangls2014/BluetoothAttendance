@@ -9,6 +9,11 @@ import com.zhangls.android.attendance.db.entity.UserModel
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import java.io.File
+
 
 class BaseApiRepository(private val provider: LifecycleProvider<Lifecycle.Event>) {
 
@@ -75,6 +80,30 @@ class BaseApiRepository(private val provider: LifecycleProvider<Lifecycle.Event>
                 .create(ApiMethod::class.java)
                 .attendanceList3(token, groupId)
                 .subscribeOn(Schedulers.io())
+                .compose(provider.bindToLifecycle())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(observer)
+    }
+
+    /**
+     * @see ApiMethod.updateGroup
+     */
+    fun updateGroup(group: String, user: String, image: File, observer: Observer<BaseModel<String>>) {
+        val builder = MultipartBody.Builder()
+
+        builder.addFormDataPart("group", null,
+                RequestBody.create(MediaType.parse("text/plain"), group))
+        builder.addFormDataPart("user", null,
+                RequestBody.create(MediaType.parse("text/plain"), user))
+        val requestBody = RequestBody.create(MediaType.parse("image/*"), image)
+        builder.addFormDataPart("publish_img", image.name, requestBody)
+
+        builder.setType(MultipartBody.FORM)
+        ApiService.default
+                .create(ApiMethod::class.java)
+                .updateGroup(builder.build())
+                .subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
                 .compose(provider.bindToLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(observer)

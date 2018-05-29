@@ -127,4 +127,5 @@ dependencies {
     implementation 'com.android.support:support-fragment:27.1.1'
     kapt 'com.github.bumptech.glide:compiler:4.6.1'
     implementation 'androidx.core:core-ktx:0.3'
+    implementation 'me.xiaosai:image_compress:1.0.1'
 }

@@ -47,6 +47,7 @@ abstract class AbstractDatabase : RoomDatabase() {
                 Room.databaseBuilder(context.applicationContext,
                         AbstractDatabase::class.java,
                         "Bluetooth.db")
+                        .allowMainThreadQueries()
                         .build()
     }
 }
