@@ -330,7 +330,7 @@ class ListActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if (!groupView) {
+        if (!groupView && mBluetoothAdapter != null && mBluetoothAdapter.isEnabled) {
             // 在退出界面的时候关闭蓝牙扫描功能
             mBluetoothAdapter.bluetoothLeScanner.stopScan(mCallback)
         }
