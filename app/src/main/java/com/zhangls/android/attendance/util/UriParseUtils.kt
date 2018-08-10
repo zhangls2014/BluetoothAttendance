@@ -50,12 +50,12 @@ object UriParseUtils {
         val imageFileName = "JPEG_" + timeStamp + "_"
 
         val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        try {
+        return try {
             val file = File.createTempFile(imageFileName, ".jpg", storageDir)
-            return getUriForFile(context, file)
+            getUriForFile(context, file)
         } catch (e: IOException) {
             e.printStackTrace()
-            return null
+            null
         }
 
     }

@@ -70,9 +70,9 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
 
             holder.operate.text = context.getString(R.string.groupAttendanceRecord)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorOrange))
-            holder.operate.setOnClickListener({
+            holder.operate.setOnClickListener {
                 ListActivity.activityStart(context, true, group.groupId, group.groupName)
-            })
+            }
         } else {
             holder.count.visibility = View.GONE
 
@@ -81,9 +81,9 @@ class GroupViewBinder : ItemViewBinder<GroupModel, GroupViewBinder.ViewHolder>()
 
             holder.operate.text = context.getString(R.string.groupAttendanceStart)
             holder.operate.setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
-            holder.operate.setOnClickListener({
+            holder.operate.setOnClickListener {
                 ListActivity.activityStart(context, false, group.groupId, group.groupName)
-            })
+            }
         }
     }
 

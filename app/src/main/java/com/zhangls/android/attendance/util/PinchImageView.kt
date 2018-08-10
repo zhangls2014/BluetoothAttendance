@@ -288,7 +288,7 @@ class PinchImageView : ImageView {
      * @param matrix 用于填充结果的对象
      * @return 如果传了matrix参数则将matrix填充后返回,否则new一个填充返回
      */
-    fun getInnerMatrix(matrix: Matrix?): Matrix {
+    private fun getInnerMatrix(matrix: Matrix?): Matrix {
         var matrix = matrix
         if (matrix == null) {
             matrix = Matrix()
@@ -321,7 +321,7 @@ class PinchImageView : ImageView {
      * @see .getOuterMatrix
      * @see .getInnerMatrix
      */
-    fun getCurrentImageMatrix(matrix: Matrix): Matrix {
+    private fun getCurrentImageMatrix(matrix: Matrix): Matrix {
         var matrix = matrix
         //获取内部变换矩阵
         matrix = getInnerMatrix(matrix)
@@ -347,8 +347,8 @@ class PinchImageView : ImageView {
         } else {
             rectF.setEmpty()
         }
-        if (!isReady) {
-            return rectF
+        return if (!isReady) {
+            rectF
         } else {
             //申请一个空matrix
             val matrix = MathUtils.matrixTake()
@@ -359,7 +359,7 @@ class PinchImageView : ImageView {
             matrix.mapRect(rectF)
             //释放临时matrix
             MathUtils.matrixGiven(matrix)
-            return rectF
+            rectF
         }
     }
 
@@ -372,7 +372,7 @@ class PinchImageView : ImageView {
         if (pinchMode == PinchImageView.PINCH_MODE_SCALE) {
             return true
         }
-        val bound = getImageBound(null) ?: return false
+        val bound = getImageBound(null)
         if (bound.isEmpty) {
             return false
         }
@@ -392,7 +392,7 @@ class PinchImageView : ImageView {
         if (pinchMode == PinchImageView.PINCH_MODE_SCALE) {
             return true
         }
-        val bound = getImageBound(null) ?: return false
+        val bound = getImageBound(null)
         if (bound.isEmpty) {
             return false
         }
@@ -539,10 +539,10 @@ class PinchImageView : ImageView {
             //如果监听列表修改被锁定,那么尝试在监听列表副本上添加
             //监听列表副本将会在锁定被解除时替换到监听列表里
             if (mOuterMatrixChangedListenersCopy == null) {
-                if (mOuterMatrixChangedListeners != null) {
-                    mOuterMatrixChangedListenersCopy = ArrayList(mOuterMatrixChangedListeners!!)
+                mOuterMatrixChangedListenersCopy = if (mOuterMatrixChangedListeners != null) {
+                    ArrayList(mOuterMatrixChangedListeners!!)
                 } else {
-                    mOuterMatrixChangedListenersCopy = ArrayList()
+                    ArrayList()
                 }
             }
             mOuterMatrixChangedListenersCopy!!.add(listener)
@@ -832,36 +832,36 @@ class PinchImageView : ImageView {
             //如果图片左边在移动后超出控件左边
         } else if (bound.left + xDiff > 0) {
             //如果在移动之前是没超出的，计算应该移动的距离
-            if (bound.left < 0) {
-                xDiff = -bound.left
+            xDiff = if (bound.left < 0) {
+                -bound.left
                 //否则无法移动
             } else {
-                xDiff = 0f
+                0f
             }
             //如果图片右边在移动后超出控件右边
         } else if (bound.right + xDiff < displayWidth) {
             //如果在移动之前是没超出的，计算应该移动的距离
-            if (bound.right > displayWidth) {
-                xDiff = displayWidth - bound.right
+            xDiff = if (bound.right > displayWidth) {
+                displayWidth - bound.right
                 //否则无法移动
             } else {
-                xDiff = 0f
+                0f
             }
         }
         //以下同理
         if (bound.bottom - bound.top < displayHeight) {
             yDiff = 0f
         } else if (bound.top + yDiff > 0) {
-            if (bound.top < 0) {
-                yDiff = -bound.top
+            yDiff = if (bound.top < 0) {
+                -bound.top
             } else {
-                yDiff = 0f
+                0f
             }
         } else if (bound.bottom + yDiff < displayHeight) {
-            if (bound.bottom > displayHeight) {
-                yDiff = displayHeight - bound.bottom
+            yDiff = if (bound.bottom > displayHeight) {
+                displayHeight - bound.bottom
             } else {
-                yDiff = 0f
+                0f
             }
         }
         MathUtils.rectFGiven(bound)
@@ -871,11 +871,7 @@ class PinchImageView : ImageView {
         //触发重绘
         invalidate()
         //检查是否有变化
-        return if (xDiff != 0f || yDiff != 0f) {
-            true
-        } else {
-            false
-        }
+        return xDiff != 0f || yDiff != 0f
     }
 
     /**
@@ -986,19 +982,15 @@ class PinchImageView : ImageView {
         //修正位置
         var postX = 0f
         var postY = 0f
-        if (testBound.right - testBound.left < displayWidth) {
-            postX = displayWidth / 2f - (testBound.right + testBound.left) / 2f
-        } else if (testBound.left > 0) {
-            postX = -testBound.left
-        } else if (testBound.right < displayWidth) {
-            postX = displayWidth - testBound.right
+        when {
+            testBound.right - testBound.left < displayWidth -> postX = displayWidth / 2f - (testBound.right + testBound.left) / 2f
+            testBound.left > 0 -> postX = -testBound.left
+            testBound.right < displayWidth -> postX = displayWidth - testBound.right
         }
-        if (testBound.bottom - testBound.top < displayHeight) {
-            postY = displayHeight / 2f - (testBound.bottom + testBound.top) / 2f
-        } else if (testBound.top > 0) {
-            postY = -testBound.top
-        } else if (testBound.bottom < displayHeight) {
-            postY = displayHeight - testBound.bottom
+        when {
+            testBound.bottom - testBound.top < displayHeight -> postY = displayHeight / 2f - (testBound.bottom + testBound.top) / 2f
+            testBound.top > 0 -> postY = -testBound.top
+            testBound.bottom < displayHeight -> postY = displayHeight - testBound.bottom
         }
         //应用修正位置
         animEnd.postTranslate(postX, postY)
@@ -1062,20 +1054,32 @@ class PinchImageView : ImageView {
         //获取缩放修正后的图片方框
         testMatrix.mapRect(testBound)
         //检测缩放修正后位置有无超出，如果超出进行位置修正
-        if (testBound.right - testBound.left < displayWidth) {
-            postX = displayWidth / 2f - (testBound.right + testBound.left) / 2f
-        } else if (testBound.left > 0) {
-            postX = -testBound.left
-        } else if (testBound.right < displayWidth) {
-            postX = displayWidth - testBound.right
+        //计算结束矩阵
+        //清理当前可能正在执行的动画
+        //启动矩阵动画
+        //清理临时变量
+        //清理临时变量
+        when {
+            testBound.right - testBound.left < displayWidth -> postX = displayWidth / 2f - (testBound.right + testBound.left) / 2f
+            testBound.left > 0 -> postX = -testBound.left
+            testBound.right < displayWidth -> postX = displayWidth - testBound.right
         }
-        if (testBound.bottom - testBound.top < displayHeight) {
-            postY = displayHeight / 2f - (testBound.bottom + testBound.top) / 2f
-        } else if (testBound.top > 0) {
-            postY = -testBound.top
-        } else if (testBound.bottom < displayHeight) {
-            postY = displayHeight - testBound.bottom
+        //计算结束矩阵
+        //清理当前可能正在执行的动画
+        //启动矩阵动画
+        //清理临时变量
+        //清理临时变量
+        when {
+            testBound.bottom - testBound.top < displayHeight -> postY = displayHeight / 2f - (testBound.bottom + testBound.top) / 2f
+            testBound.top > 0 -> postY = -testBound.top
+            testBound.bottom < displayHeight -> postY = displayHeight - testBound.bottom
         }
+        //如果位置修正不为0，说明进行了修正
+        //只有有执行修正才执行动画
+        //如果位置修正不为0，说明进行了修正
+        //只有有执行修正才执行动画
+        //如果位置修正不为0，说明进行了修正
+        //只有有执行修正才执行动画
         //如果位置修正不为0，说明进行了修正
         if (postX != 0f || postY != 0f) {
             change = true
@@ -1472,12 +1476,12 @@ class PinchImageView : ImageView {
          * @return float[]{scaleX, scaleY}
          */
         fun getMatrixScale(matrix: Matrix?): FloatArray {
-            if (matrix != null) {
+            return if (matrix != null) {
                 val value = FloatArray(9)
                 matrix.getValues(value)
-                return floatArrayOf(value[0], value[4])
+                floatArrayOf(value[0], value[4])
             } else {
-                return FloatArray(2)
+                FloatArray(2)
             }
         }
 
@@ -1492,7 +1496,7 @@ class PinchImageView : ImageView {
          * @return unknownPoint
          */
         fun inverseMatrixPoint(point: FloatArray?, matrix: Matrix?): FloatArray {
-            if (point != null && matrix != null) {
+            return if (point != null && matrix != null) {
                 val dst = FloatArray(2)
                 //计算matrix的逆矩阵
                 val inverse = matrixTake()
@@ -1501,9 +1505,9 @@ class PinchImageView : ImageView {
                 inverse.mapPoints(dst, point)
                 //清除临时变量
                 matrixGiven(inverse)
-                return dst
+                dst
             } else {
-                return FloatArray(2)
+                FloatArray(2)
             }
         }
 
@@ -1552,110 +1556,115 @@ class PinchImageView : ImageView {
                 scaleType = ImageView.ScaleType.FIT_CENTER
             }
             result.setEmpty()
-            if (ImageView.ScaleType.FIT_XY == scaleType) {
-                result.set(container)
-            } else if (ImageView.ScaleType.CENTER == scaleType) {
-                val matrix = matrixTake()
-                val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
-                matrix.setTranslate((container.width() - srcWidth) * 0.5f, (container.height() - srcHeight) * 0.5f)
-                matrix.mapRect(result, rect)
-                rectFGiven(rect)
-                matrixGiven(matrix)
-                result.left += container.left
-                result.right += container.left
-                result.top += container.top
-                result.bottom += container.top
-            } else if (ImageView.ScaleType.CENTER_CROP == scaleType) {
-                val matrix = matrixTake()
-                val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val scale: Float
-                var dx = 0f
-                var dy = 0f
-                if (srcWidth * container.height() > container.width() * srcHeight) {
-                    scale = container.height() / srcHeight
+            when (scaleType) {
+                ImageView.ScaleType.FIT_XY -> result.set(container)
+                ImageView.ScaleType.CENTER -> {
+                    val matrix = matrixTake()
+                    val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    matrix.setTranslate((container.width() - srcWidth) * 0.5f, (container.height() - srcHeight) * 0.5f)
+                    matrix.mapRect(result, rect)
+                    rectFGiven(rect)
+                    matrixGiven(matrix)
+                    result.left += container.left
+                    result.right += container.left
+                    result.top += container.top
+                    result.bottom += container.top
+                }
+                ImageView.ScaleType.CENTER_CROP -> {
+                    val matrix = matrixTake()
+                    val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val scale: Float
+                    var dx = 0f
+                    var dy = 0f
+                    if (srcWidth * container.height() > container.width() * srcHeight) {
+                        scale = container.height() / srcHeight
+                        dx = (container.width() - srcWidth * scale) * 0.5f
+                    } else {
+                        scale = container.width() / srcWidth
+                        dy = (container.height() - srcHeight * scale) * 0.5f
+                    }
+                    matrix.setScale(scale, scale)
+                    matrix.postTranslate(dx, dy)
+                    matrix.mapRect(result, rect)
+                    rectFGiven(rect)
+                    matrixGiven(matrix)
+                    result.left += container.left
+                    result.right += container.left
+                    result.top += container.top
+                    result.bottom += container.top
+                }
+                ImageView.ScaleType.CENTER_INSIDE -> {
+                    val matrix = matrixTake()
+                    val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val scale: Float
+                    val dx: Float
+                    val dy: Float
+                    scale = if (srcWidth <= container.width() && srcHeight <= container.height()) {
+                        1f
+                    } else {
+                        Math.min(container.width() / srcWidth, container.height() / srcHeight)
+                    }
                     dx = (container.width() - srcWidth * scale) * 0.5f
-                } else {
-                    scale = container.width() / srcWidth
                     dy = (container.height() - srcHeight * scale) * 0.5f
+                    matrix.setScale(scale, scale)
+                    matrix.postTranslate(dx, dy)
+                    matrix.mapRect(result, rect)
+                    rectFGiven(rect)
+                    matrixGiven(matrix)
+                    result.left += container.left
+                    result.right += container.left
+                    result.top += container.top
+                    result.bottom += container.top
                 }
-                matrix.setScale(scale, scale)
-                matrix.postTranslate(dx, dy)
-                matrix.mapRect(result, rect)
-                rectFGiven(rect)
-                matrixGiven(matrix)
-                result.left += container.left
-                result.right += container.left
-                result.top += container.top
-                result.bottom += container.top
-            } else if (ImageView.ScaleType.CENTER_INSIDE == scaleType) {
-                val matrix = matrixTake()
-                val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val scale: Float
-                val dx: Float
-                val dy: Float
-                scale = if (srcWidth <= container.width() && srcHeight <= container.height()) {
-                    1f
-                } else {
-                    Math.min(container.width() / srcWidth, container.height() / srcHeight)
+                ImageView.ScaleType.FIT_CENTER -> {
+                    val matrix = matrixTake()
+                    val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val tempSrc = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val tempDst = rectFTake(0f, 0f, container.width(), container.height())
+                    matrix.setRectToRect(tempSrc, tempDst, Matrix.ScaleToFit.CENTER)
+                    matrix.mapRect(result, rect)
+                    rectFGiven(tempDst)
+                    rectFGiven(tempSrc)
+                    rectFGiven(rect)
+                    matrixGiven(matrix)
+                    result.left += container.left
+                    result.right += container.left
+                    result.top += container.top
+                    result.bottom += container.top
                 }
-                dx = (container.width() - srcWidth * scale) * 0.5f
-                dy = (container.height() - srcHeight * scale) * 0.5f
-                matrix.setScale(scale, scale)
-                matrix.postTranslate(dx, dy)
-                matrix.mapRect(result, rect)
-                rectFGiven(rect)
-                matrixGiven(matrix)
-                result.left += container.left
-                result.right += container.left
-                result.top += container.top
-                result.bottom += container.top
-            } else if (ImageView.ScaleType.FIT_CENTER == scaleType) {
-                val matrix = matrixTake()
-                val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val tempSrc = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val tempDst = rectFTake(0f, 0f, container.width(), container.height())
-                matrix.setRectToRect(tempSrc, tempDst, Matrix.ScaleToFit.CENTER)
-                matrix.mapRect(result, rect)
-                rectFGiven(tempDst)
-                rectFGiven(tempSrc)
-                rectFGiven(rect)
-                matrixGiven(matrix)
-                result.left += container.left
-                result.right += container.left
-                result.top += container.top
-                result.bottom += container.top
-            } else if (ImageView.ScaleType.FIT_START == scaleType) {
-                val matrix = matrixTake()
-                val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val tempSrc = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val tempDst = rectFTake(0f, 0f, container.width(), container.height())
-                matrix.setRectToRect(tempSrc, tempDst, Matrix.ScaleToFit.START)
-                matrix.mapRect(result, rect)
-                rectFGiven(tempDst)
-                rectFGiven(tempSrc)
-                rectFGiven(rect)
-                matrixGiven(matrix)
-                result.left += container.left
-                result.right += container.left
-                result.top += container.top
-                result.bottom += container.top
-            } else if (ImageView.ScaleType.FIT_END == scaleType) {
-                val matrix = matrixTake()
-                val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val tempSrc = rectFTake(0f, 0f, srcWidth, srcHeight)
-                val tempDst = rectFTake(0f, 0f, container.width(), container.height())
-                matrix.setRectToRect(tempSrc, tempDst, Matrix.ScaleToFit.END)
-                matrix.mapRect(result, rect)
-                rectFGiven(tempDst)
-                rectFGiven(tempSrc)
-                rectFGiven(rect)
-                matrixGiven(matrix)
-                result.left += container.left
-                result.right += container.left
-                result.top += container.top
-                result.bottom += container.top
-            } else {
-                result.set(container)
+                ImageView.ScaleType.FIT_START -> {
+                    val matrix = matrixTake()
+                    val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val tempSrc = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val tempDst = rectFTake(0f, 0f, container.width(), container.height())
+                    matrix.setRectToRect(tempSrc, tempDst, Matrix.ScaleToFit.START)
+                    matrix.mapRect(result, rect)
+                    rectFGiven(tempDst)
+                    rectFGiven(tempSrc)
+                    rectFGiven(rect)
+                    matrixGiven(matrix)
+                    result.left += container.left
+                    result.right += container.left
+                    result.top += container.top
+                    result.bottom += container.top
+                }
+                ImageView.ScaleType.FIT_END -> {
+                    val matrix = matrixTake()
+                    val rect = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val tempSrc = rectFTake(0f, 0f, srcWidth, srcHeight)
+                    val tempDst = rectFTake(0f, 0f, container.width(), container.height())
+                    matrix.setRectToRect(tempSrc, tempDst, Matrix.ScaleToFit.END)
+                    matrix.mapRect(result, rect)
+                    rectFGiven(tempDst)
+                    rectFGiven(tempSrc)
+                    rectFGiven(rect)
+                    matrixGiven(matrix)
+                    result.left += container.left
+                    result.right += container.left
+                    result.top += container.top
+                    result.bottom += container.top
+                }
+                else -> result.set(container)
             }
         }
     }

@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import com.zhangls.android.attendance.R
 import com.zhangls.android.attendance.db.AbstractDatabase
 import com.zhangls.android.attendance.db.entity.UserModel

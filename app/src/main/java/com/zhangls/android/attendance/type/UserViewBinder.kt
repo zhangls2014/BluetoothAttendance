@@ -76,7 +76,7 @@ class UserViewBinder(private val isView: Boolean) : ItemViewBinder<UserModel, Us
 
             holder.operate.visibility = if (isView) View.GONE else View.VISIBLE
             holder.operate.text = context.getString(R.string.groupAttendanceStart)
-            holder.operate.setOnClickListener({
+            holder.operate.setOnClickListener {
                 // 教师可以通过手动点击考勤按钮给学生考勤
                 doAsync {
                     val database = AbstractDatabase.getInstance(context)
@@ -86,7 +86,7 @@ class UserViewBinder(private val isView: Boolean) : ItemViewBinder<UserModel, Us
 
                     database.userDao().updateUser(user)
                 }
-            })
+            }
         }
     }
 

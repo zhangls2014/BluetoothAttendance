@@ -43,7 +43,7 @@
         <activity android:name=".ui.MainActivity" />
         <activity android:name=".ui.ListActivity" />
         <activity android:name=".ui.AddActivity" />
-        <activity android:name=".ui.PictureActivity"></activity>
+        <activity android:name=".ui.PictureActivity" />
     </application>
 
 </manifest>

@@ -6,7 +6,6 @@ import com.zhangls.android.attendance.model.LoginModel
 import com.zhangls.android.attendance.db.entity.UserModel
 import io.reactivex.Observable
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import retrofit2.http.*
 
 /**
@@ -81,7 +80,6 @@ interface ApiMethod {
     /**
      * U4 上传分组信息
      *
-     * @param partMap 分组信息
      * @param image 图片
      * @return 状态
      */

@@ -361,10 +361,8 @@ class ListActivity : AppCompatActivity() {
         AndPermission.with(this)
                 .runtime()
                 .permission(Permission.ACCESS_COARSE_LOCATION)
-                .onGranted({
-                    scanDevices()
-                })
-                .onDenied({ permissions ->
+                .onGranted { scanDevices() }
+                .onDenied { permissions ->
                     if (AndPermission.hasAlwaysDeniedPermission(this, permissions)) {
                         // 权限申请被拒绝时，检查，若勾选了始终拒绝权限授予，则弹出提示框
                         alert(R.string.permission_location_reason) {
@@ -381,8 +379,8 @@ class ListActivity : AppCompatActivity() {
                             noButton { finish() }
                         }.show()
                     }
-                })
-                .rationale({ _, _, executor ->
+                }
+                .rationale { _, _, executor ->
                     // 弹出权限申请说明提示框
                     alert(R.string.permission_location_reason) {
                         title = getString(R.string.title_alert_permission)
@@ -392,7 +390,7 @@ class ListActivity : AppCompatActivity() {
                             finish()
                         }
                     }.show()
-                })
+                }
                 .start()
     }
 
@@ -403,10 +401,8 @@ class ListActivity : AppCompatActivity() {
         AndPermission.with(this)
                 .runtime()
                 .permission(Permission.WRITE_EXTERNAL_STORAGE)
-                .onGranted({
-                    openCamera()
-                })
-                .onDenied({ permissions ->
+                .onGranted { openCamera() }
+                .onDenied { permissions ->
                     if (AndPermission.hasAlwaysDeniedPermission(this, permissions)) {
                         // 权限申请被拒绝时，检查，若勾选了始终拒绝权限授予，则弹出提示框
                         alert(R.string.permission_storage_reason) {
@@ -423,15 +419,15 @@ class ListActivity : AppCompatActivity() {
                             noButton {}
                         }.show()
                     }
-                })
-                .rationale({ _, _, executor ->
+                }
+                .rationale { _, _, executor ->
                     // 弹出权限申请说明提示框
                     alert(R.string.permission_storage_reason) {
                         title = getString(R.string.title_alert_permission)
                         yesButton { executor.execute() }
                         noButton { executor.cancel() }
                     }.show()
-                })
+                }
                 .start()
     }
 

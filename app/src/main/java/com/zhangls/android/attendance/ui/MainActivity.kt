@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             title = String(Base64.decode(username, Base64.DEFAULT))
         }
         // 添加分组按钮
-        fabAdd.setOnClickListener {
+        fabAdd.setOnClickListener { it ->
             alert(R.string.addGroupContent) {
                 titleResource = R.string.addGroupTitle
                 isCancelable = false
